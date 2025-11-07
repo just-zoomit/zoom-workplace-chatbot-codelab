@@ -1,0 +1,1459 @@
+
+<!doctype html>
+
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+  <meta name="theme-color" content="#4F7DC9">
+  <meta charset="UTF-8">
+  <title>How to build a Zoom Workplace Chatbot</title>
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Source+Code+Pro:400|Roboto:400,300,400italic,500,700|Roboto+Mono">
+  <link rel="stylesheet" href="//fonts.googleapis.com/icon?family=Material+Icons">
+  <link rel="stylesheet" href="https://storage.googleapis.com/claat-public/codelab-elements.css">
+  <style>
+    .success {
+      color: #1e8e3e;
+    }
+    .error {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <google-codelab-analytics gaid="UA-49880327-14" ga4id=""></google-codelab-analytics>
+  <google-codelab codelab-gaid=""
+                  codelab-ga4id=""
+                  id="zoom-workplace-codelab"
+                  title="How to build a Zoom Workplace Chatbot"
+                  environment="web"
+                  feedback-link="https://github.com/just-zoomit">
+    
+      <google-codelab-step label="Before you begin" duration="1">
+        <p>In this codelab, you&#39;ll learn how to build Zoom Chatbot with node.js experss backend and Javascript.</p>
+<p class="image-container"><img alt="alt-text-here" src="img/c90d5b78511d4104.png"></p>
+<p>The completed application offers userful features that demonstracte how to create applications for Zoom Team Chat.These features include the following:</p>
+<table>
+<tr><td colspan="1" rowspan="1"><p><strong>Name</strong></p>
+</td><td colspan="1" rowspan="1"><p><strong>Description</strong></p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p><strong>Setup, Auth, and Deep Linking</strong></p>
+</td><td colspan="1" rowspan="1"><p>Set up your first Zoom Chatbot and implement OAuth 2.0 to handle chatbot installation and deep linking.</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p><strong>Send, edit, and delete messages</strong></p>
+</td><td colspan="1" rowspan="1"><p>Learn how to send messages using the Zoom Chatbot API. You&#39;ll create a Python script that authenticates and sends messages to a Zoom channel.</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p><strong>Handling Events</strong></p>
+</td><td colspan="1" rowspan="1"><p>Learn how to handle real-time events in Zoom Chatbot development. We&#39;ll subscribe to Zoom webhook events and use Flask to capture and respond to messages and user actions.</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p><strong>Slash Commands</strong></p>
+</td><td colspan="1" rowspan="1"><p>Learn how to create and handle custom slash commands in Zoom Workplace. You&#39;ll set up commands, process user input, and respond dynamically with chatbot messages.</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p><strong>Markdown Messages &amp; Emojis</strong></p>
+</td><td colspan="1" rowspan="1"><p>Learn how to format and enhance your chatbot responses using markdown syntax, emojis, and message updates that react to user interactions.</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p><strong>Reaction Handling</strong></p>
+</td><td colspan="1" rowspan="1"><p>Learn how to capture and respond to reactions (emoji responses) to messages in Zoom Team Chat. You&#39;ll detect reactions through webhooks and handle them in your server logic.</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p><strong>Replying to Messages (Using Threads)</strong></p>
+</td><td colspan="1" rowspan="1"><p>Learn how to reply to specific Zoom Team Chat messages using threaded replies. This tutorial shows how to nest responses under a parent message using the<code>reply_to</code>parameter in Node.js or Python.</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p><strong>Scheduling Messages</strong></p>
+</td><td colspan="1" rowspan="1"><p>Learn how to schedule messages in Zoom Team Chat using Python or Node.js. We&#39;ll walk through queuing messages for future delivery, listing scheduled messages, and canceling pending ones.</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p><strong>Apps in Chat</strong></p>
+</td><td colspan="1" rowspan="1"><p>Learn how to add a Chatbot to a Team Chat channel. This tutorial shows how to detect Chatbot events and responses.</p>
+</td></tr>
+</table>
+<h2 is-upgraded>Prerequisites</h2>
+<ol type="1">
+<li>A <a href="https://developers.zoom.us" target="_blank">Zoom Developer Account</a></li>
+<li>A <strong>General App</strong> created in the <a href="https://marketplace.zoom.us/" target="_blank">Zoom App Marketplace</a></li>
+<li>Node.js (v18+ recommended)</li>
+<li><a href="https://ngrok.com" target="_blank">ngrok</a> (or another tunneling service)</li>
+<li>Your Zoom Chatbot credentials: <ul>
+<li><strong>Client ID</strong></li>
+<li><strong>Client Secret</strong></li>
+<li><strong>Bot JID</strong></li>
+<li><strong>Verification Token</strong></li>
+</ul>
+</li>
+</ol>
+<h2 class="checklist" is-upgraded>What You&#39;ll Learn</h2>
+<p>By the end of this series, you&#39;ll have a working chatbot that can:</p>
+<ul>
+<li>Post and reply to messages within Zoom Team Chat</li>
+<li>Handle events from users and channels</li>
+<li>Respond to slash commands</li>
+<li>Send interactive messages, markdown, and emojis</li>
+<li>Search messages using the Zoom Team Chat API</li>
+<li>Schedule messages for future delivery</li>
+<li>Integrate with external APIs or databases</li>
+</ul>
+<h2 is-upgraded>What you&#39;ll need</h2>
+<ul>
+<li>Git</li>
+<li>Node</li>
+<li>Ngrok or a tunnel service provider of your choice</li>
+<li>Development envrinoment with a code editor and terminal</li>
+<li>Zoom Account with developer permissions</li>
+</ul>
+<h2 is-upgraded>Resources</h2>
+<ul>
+<li><a href="https://developers.zoom.us/docs/team-chat/" target="_blank">Team Chat</a></li>
+</ul>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Set up your development environment" duration="2">
+        <p>This codelab provides the app&#39;s starter codebase. You can clone that repo and follow the steps to get started:</p>
+<h2 is-upgraded>Starter Application</h2>
+<pre><code>https://github.com/just-zoomit/zoomworkplace-chatbot -- starter-app
+
+</code></pre>
+<h2 is-upgraded>Create a Zoom Workplace Team Chat Chatbot app with the App Manifest API</h2>
+<p>This guide shows how to create a Zoom Team Chatbot app using the <strong>App Manifest API</strong>.</p>
+<ul>
+<li>First, add the following marketplace scopes:<ul>
+<li>Create apps: marketplace:write:app</li>
+<li>View an app: marketplace:read:app</li>
+</ul>
+</li>
+<li>Use the <a href="https://developers.zoom.us/docs/api/marketplace/#tag/manifest/put/marketplace/apps/%7BappId%7D/manifest" target="_blank">Update an app by manifest</a> endpoint to quickly configure a Zoom Marketplace app.</li>
+<li>Replace <code>example.ngrok.app</code> with your actual ngrok domain when testing locally.</li>
+</ul>
+<h2 is-upgraded>Endpoint</h2>
+<pre><code language="language-http" class="language-http">PUT /marketplace/apps/{appId}/manifest
+</code></pre>
+<h2 is-upgraded>App Manifest JSON object</h2>
+<pre><code language="language-json" class="language-json">{
+    &#34;manifest&#34;: {
+        &#34;display_information&#34;: {
+            &#34;display_name&#34;: &#34;Zoom Claude Chatbot Sample&#34;
+        },
+        &#34;oauth_information&#34;: {
+            &#34;usage&#34;: &#34;USER_OPERATION&#34;,
+            &#34;development_redirect_uri&#34;: &#34;https://example.ngrok.app&#34;,
+            &#34;production_redirect_uri&#34;: &#34;&#34;,
+            &#34;oauth_allow_list&#34;: [
+                &#34;https://example.ngrok.app&#34;,
+                &#34;https://oauth.pstmn.io/v1/callback&#34;
+            ],
+            &#34;strict_mode&#34;: false,
+            &#34;subdomain_strict_mode&#34;: false,
+            &#34;scopes&#34;: [
+                {
+                    &#34;scope&#34;: &#34;imchat:userapp&#34;,
+                    &#34;optional&#34;: false
+                },
+                {
+                    &#34;scope&#34;: &#34;marketplace:read:app&#34;,
+                    &#34;optional&#34;: false
+                },
+                {
+                    &#34;scope&#34;: &#34;marketplace:write:app&#34;,
+                    &#34;optional&#34;: false
+                }
+            ]
+        },
+        &#34;features&#34;: {
+            &#34;products&#34;: [
+                &#34;ZOOM_CHAT&#34;
+            ],
+            &#34;development_home_uri&#34;: &#34;&#34;,
+            &#34;production_home_uri&#34;: &#34;&#34;,
+            &#34;in_client_feature&#34;: {
+                &#34;zoom_app_api&#34;: {
+                    &#34;enable&#34;: false,
+                    &#34;zoom_app_apis&#34;: []
+                },
+                &#34;guest_mode&#34;: {
+                    &#34;enable&#34;: false,
+                    &#34;enable_test_guest_mode&#34;: false
+                },
+                &#34;in_client_oauth&#34;: {
+                    &#34;enable&#34;: false
+                },
+                &#34;collaborate_mode&#34;: {
+                    &#34;enable&#34;: false,
+                    &#34;enable_screen_sharing&#34;: false,
+                    &#34;enable_play_together&#34;: false,
+                    &#34;enable_start_immediately&#34;: false,
+                    &#34;enable_join_immediately&#34;: false
+                }
+            },
+            &#34;zoom_client_support&#34;: {
+                &#34;mobile&#34;: {
+                    &#34;enable&#34;: false
+                },
+                &#34;zoom_room&#34;: {
+                    &#34;enable&#34;: false,
+                    &#34;enable_personal_zoom_room&#34;: false,
+                    &#34;enable_shared_zoom_room&#34;: false,
+                    &#34;enable_digital_signage&#34;: false,
+                    &#34;enable_zoom_rooms_controller&#34;: false
+                },
+                &#34;pwa_client&#34;: {
+                    &#34;enable&#34;: false
+                }
+            },
+            &#34;embed&#34;: {
+                &#34;meeting_sdk&#34;: {
+                    &#34;enable&#34;: false,
+                    &#34;enable_device&#34;: false,
+                    &#34;devices&#34;: []
+                },
+                &#34;contact_center_sdk&#34;: {
+                    &#34;enable&#34;: false
+                },
+                &#34;phone_sdk&#34;: {
+                    &#34;enable&#34;: false
+                }
+            },
+            &#34;team_chat_subscription&#34;: {
+                &#34;enable&#34;: true,
+                &#34;enable_support_channel&#34;: false,
+                &#34;slash_command&#34;: {
+                    &#34;command&#34;: &#34;&#34;,
+                    &#34;command_hints&#34;: [],
+                    &#34;enable_add_to_channel&#34;: false,
+                    &#34;development_message_url&#34;: &#34;https://example.ngrok.app/anthropic&#34;,
+                    &#34;production_message_url&#34;: &#34;&#34;,
+                    &#34;sender_type&#34;: &#34;zoom&#34;,
+                    &#34;welcome_msg&#34;: {
+                        &#34;title&#34;: &#34;&#34;,
+                        &#34;body&#34;: &#34;&#34;
+                    },
+                    &#34;trust_domain_list&#34;: []
+                },
+                &#34;shortcuts&#34;: []
+            },
+            &#34;event_subscription&#34;: {
+                &#34;enable&#34;: false,
+                &#34;events&#34;: []
+            }
+        }
+    }
+}
+</code></pre>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Review the starter codebase" duration="0">
+        <p>In this section, you&#39;ll review a few areas of the app&#39;s starter codebase to which you&#39;ll add functionality in this codelab.</p>
+<h2 is-upgraded>Folder and file structure</h2>
+<p>The following table contains an overview of the folder and file structure of the app:</p>
+<table>
+<tr><td colspan="1" rowspan="1"><p>Path</p>
+</td><td colspan="1" rowspan="1"><p>Description</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p><strong><code>server.js</code></strong></p>
+</td><td colspan="1" rowspan="1"><p>Main entry point for the Express application. Loads environment variables, configures middleware (CORS, JSON), mounts all routes, and starts the HTTP server.</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p><strong><code>routes/webhookRoutes.js</code></strong></p>
+</td><td colspan="1" rowspan="1"><p>Handles incoming Zoom webhook events such as messages, reactions, and slash commands. Verifies the webhook signature or token before processing.</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p><strong><code>routes/oauthRoutes.js</code></strong></p>
+</td><td colspan="1" rowspan="1"><p>Demonstrates how to handle OAuth flows or token exchanges for installing and authorizing the Zoom Chatbot or app.</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p><strong><code>routes/messageRoutes.js</code></strong></p>
+</td><td colspan="1" rowspan="1"><p>Provides endpoints that send or reply to Zoom Team Chat messages, exposing a simple REST API layer for the frontend or Postman.</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p><strong><code>utils/anthropic.js</code></strong></p>
+</td><td colspan="1" rowspan="1"><p>Integrates with the Anthropic API (Claude). Manages non-streaming and streaming AI responses, conversation history, and message parsing.</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p><strong><code>utils/validation.js</code></strong></p>
+</td><td colspan="1" rowspan="1"><p>Centralized input validation logic for incoming requests. Ensures required parameters (like <code>to_jid</code>, <code>message</code>) are present and correctly formatted.</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p><strong><code>utils/zoom-chatbot-Auth.js</code></strong></p>
+</td><td colspan="1" rowspan="1"><p>Handles Zoom Chatbot authentication and token generation. Caches and refreshes tokens securely using either Chatbot or Server-to-Server OAuth.</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p><strong><code>utils/zoom-Api.js</code></strong></p>
+</td><td colspan="1" rowspan="1"><p>Contains helper functions for interacting with Zoom APIs—sending, editing, deleting, or searching Team Chat messages. Encapsulates retry and error handling.</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p><strong><code>views/index.html</code></strong></p>
+</td><td colspan="1" rowspan="1"><p>Public landing page for the tutorial or demo application. Often includes a button to authenticate or deep-link into the Zoom client.</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p><strong><code>views/dashboard.html</code></strong></p>
+</td><td colspan="1" rowspan="1"><p>Secondary landing page reached after authentication or installation. Provides deep-link buttons or dashboards that connect back into the Zoom Chatbot.</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p><strong><code>.env</code></strong></p>
+</td><td colspan="1" rowspan="1"><p>Stores environment variables such as Zoom credentials, Anthropic keys, model names, and app configuration. Never commit this file to version control.</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p><strong><code>package.json</code></strong></p>
+</td><td colspan="1" rowspan="1"><p>Declares Node.js dependencies, scripts, and metadata for the project. Used by npm or yarn to install and run the application.</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p><strong><code>README.md</code></strong></p>
+</td><td colspan="1" rowspan="1"><p>Primary documentation for the tutorial. Explains setup, environment configuration, and the learning objectives of each section.</p>
+</td></tr>
+</table>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Authorize and Deep Linking" duration="0">
+        <p>In this section, you add OAuth 2.0 and Chatbot deep linking from the browser.</p>
+<h2 is-upgraded>OAuth 2.0</h2>
+<h3 is-upgraded>File Path</h3>
+<pre><code>routes/oauth-routes.js
+</code></pre>
+<h3 is-upgraded>Code Snippet</h3>
+<pre><code>import express from &#39;express&#39;;
+import crypto from &#39;crypto&#39;;
+import { buildBasicAuth, exchangeCodeForAccessToken } from &#39;../utils/zoom-api.js&#39;;
+
+const router = express.Router();
+
+// OAuth: start
+router.get(&#39;/login&#39;, (req, res) =&gt; {
+  try {
+    const state = crypto.randomBytes(16).toString(&#39;hex&#39;);
+    req.session.oauth_state = state;
+
+    const url = buildBasicAuth({
+      clientId: process.env.ZOOM_CLIENT_ID,
+      redirectUri: process.env.ZOOM_REDIRECT_URI,
+      state,
+    });
+
+    console.log(&#39;Redirecting to Zoom OAuth URL:&#39;, url);
+
+    return res.redirect(url);
+  } catch (e) {
+    console.error(&#39;OAuth login error:&#39;, e);
+    return res.status(500).send(&#39;OAuth not configured.&#39;);
+  }
+});
+
+// OAuth: callback
+router.get(&#39;/callback&#39;, async (req, res) =&gt; {
+  try {
+    const { code, state, error, error_description } = req.query;
+
+    if (error) {
+      console.warn(&#39;Zoom authorization error:&#39;, error, error_description);
+      return res.status(400).send(`Authorization error: ${error}`);
+    }
+    if (!code || !state) return res.status(400).send(&#39;Missing code or state.&#39;);
+    if (state !== req.session.oauth_state) return res.status(400).send(&#39;Invalid state.&#39;);
+    delete req.session.oauth_state; // one-time use
+
+    const tokens = await exchangeCodeForAccessToken({
+      code,
+      redirectUri: process.env.ZOOM_REDIRECT_URI,
+      clientId: process.env.ZOOM_CLIENT_ID,
+      clientSecret: process.env.ZOOM_CLIENT_SECRET,
+    });
+
+    // Demo: store tokens in session (use DB/secret store in prod)
+    req.session.zoomTokens = tokens;
+
+    // Option A: redirect to a confirmation page with a button to open in Zoom
+    return res.redirect(&#39;/dashboard&#39;);
+
+    // Option B: redirect straight into Zoom via a JID deep link:
+    // return res.redirect(process.env.ROBOT_ZOOM_BOT_JID || &#39;https://zoom.us/launch/chat?jid=robot_example@xmpp.zoom.us&#39;);
+  } catch (e) {
+    console.error(&#39;OAuth callback error:&#39;, e);
+    return res.status(500).send(&#39;Token exchange failed.&#39;);
+  }
+});
+
+export default router;
+</code></pre>
+<h2 is-upgraded>Chatbot deeplinking</h2>
+<h3 is-upgraded>File Path</h3>
+<pre><code>views/dashboard.html
+</code></pre>
+<h3 is-upgraded>Code Snippet</h3>
+<pre><code>&lt;script&gt;
+      const chatbotJid = &#34;robot_v1nhrah1hrqhuexexb5nn5-a@xmpp.zoom.us&#34;; // replace with your bot JID
+
+      document.getElementById(&#34;zoom-button&#34;).addEventListener(&#34;click&#34;, () =&gt; {
+        const link = `https://zoom.us/launch/chat?jid=${encodeURIComponent(
+          chatbotJid
+        )}`;
+        // open link in a new tab/window
+        window.open(link, &#34;_blank&#34;, &#34;noopener,noreferrer&#34;);
+      });
+    &lt;/script&gt;
+</code></pre>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Sending Messages with Zoom Chatbot API" duration="0">
+        <h3 is-upgraded>File Path</h3>
+<pre><code>utils/zoom-api.js
+</code></pre>
+<h3 is-upgraded>Code Snippet</h3>
+<pre><code>/**
+ * Send a message to Zoom Team Chat
+ * @param {string} toJid - Recipient JID (user or channel)
+ * @param {string} message - Message content
+ * @param {string} [replyTo] - Optional message ID to reply to
+ * @returns {Promise&lt;Object&gt;} API response
+ */
+export async function sendChatMessage(toJid, message, replyTo = null) {
+  try {
+    
+    const accessToken = await getChatbotToken();
+    
+    const body = {
+      account_id: &#34;5YQGYK-FSc-0M0DgZTCzkQ&#34;,
+      &#34;content&#34;: {
+          &#34;head&#34;: {
+           &#34;text&#34;: &#34;Hello World&#34;
+          },
+          &#34;body&#34;: [
+           {
+            &#34;type&#34;: &#34;message&#34;,
+            &#34;text&#34;: message
+           }
+          ]
+         },
+      robot_jid: &#34;v1nhrah1hrqhuexexb5nn5-a@xmpp.zoom.us&#34;,
+      to_jid: &#39;vbdj8euxrduts0tan29tra@xmpp.zoom.us&#39;,
+      user_jid: &#34;vbdj8euxrduts0tan29tra@xmpp.zoom.us&#34;,
+      
+    };
+
+    console.log(&#39;Preparing to send message to Zoom Team Chat:&#39;, body);
+
+    if (replyTo) {
+      body.reply_to = replyTo;
+    }
+
+    const response = await fetch(`${ZOOM_API_BASE_URL}/im/chat/messages`, {
+      method: &#39;POST&#39;,
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        &#39;Content-Type&#39;: &#39;application/json&#39;,
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(`Failed to send message: ${error.message || response.statusText}`);
+    }
+
+    return response.json();
+  } catch (error) {
+    console.error(&#39;Error sending chat message:&#39;, error);
+    throw error;
+  }
+}
+
+</code></pre>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Handling Chatbot Events" duration="0">
+        <h3 is-upgraded>File Path</h3>
+<pre><code>routes/zoom-webhookHandler.js
+</code></pre>
+<h3 is-upgraded>Code Snippet</h3>
+<pre><code>import express from &#39;express&#39;;
+import { callAnthropicAPI } from &#39;../utils/anthropic.js&#39;;
+import { validateWebhookPayload, createValidationMiddleware } from &#39;../utils/validation.js&#39;;
+
+const router = express.Router();
+
+/**
+ * Handles Zoom Team Chat webhook events
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+async function handleZoomWebhook(req, res) {
+  try {
+    const { event, payload } = req.body;
+    
+    console.log(`Received Zoom webhook event: ${event}`);
+    console.log(&#39;Payload:&#39;, payload);
+
+    const toJid = payload?.toJid;
+    const message = payload?.cmd || payload?.message || &#39;&#39;;
+   
+
+    switch (event) {
+      case &#39;bot_notification&#39;:
+        console.log(&#39;Processing bot notification from Zoom Team Chat&#39;);
+        sendChatMessage(toJid, message)
+        break;
+
+      case &#39;bot_installed&#39;:
+        console.log(&#39;Zoom Team Chat bot installed successfully&#39;);
+        break;
+
+      case &#39;app_deauthorized&#39;:
+        console.log(&#39;Zoom Team Chat bot uninstalled&#39;);
+        break;
+
+      case &#39;endpoint.url_validation&#39;:
+        console.log(&#39;Validating webhook endpoint URL&#39;);
+        return res.status(200).json({
+          message: {
+            plainToken: payload?.plainToken || &#39;missing_token&#39;,
+          },
+        });
+
+      default:
+        console.log(`Unsupported Zoom webhook event type: ${event}`);
+        break;
+    }
+
+    res.status(200).json({ 
+      success: true, 
+      message: &#39;Event processed successfully&#39;,
+      event 
+    });
+
+  } catch (error) {
+    console.error(&#39;Error handling Zoom webhook event:&#39;, error);
+    
+    res.status(500).json({ 
+      success: false, 
+      error: &#39;Internal Server Error&#39;,
+      message: error.message 
+    });
+  }
+}
+
+// Webhook route with validation
+router.post(&#39;/&#39;, createValidationMiddleware(validateWebhookPayload), handleZoomWebhook);
+
+// Health check endpoint
+router.get(&#39;/health&#39;, (_req, res) =&gt; {
+  res.status(200).json({ 
+    status: &#39;healthy&#39;, 
+    timestamp: new Date().toISOString(),
+    service: &#39;zoom-webhook-handler&#39;
+  });
+});
+
+export default router;
+</code></pre>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Slash commands and UI elements" duration="0">
+        <h2 is-upgraded>Add Slash Command</h2>
+<ol type="1">
+<li>Nagivate to Zoom Marketplace place</li>
+<li>Select the App</li>
+<li>On the Surface page, naviagate to the Team Chat subscrition section</li>
+<li>Toggle Slash command then enter &#34;zwc&#34; or a command of your choice</li>
+</ol>
+<p class="image-container"><img alt="alt-text-here" src="img/a01610bc395b0921.png"></p>
+<h2 is-upgraded>UI elements</h2>
+<h2 is-upgraded>Card Builder</h2>
+<p>Use the Card Builder to quickly create UI elments.</p>
+<ol type="1">
+<li>Navgviate to App Card Builder Kit</li>
+<li>Select the Feedback Button in the action section</li>
+</ol>
+<p class="image-container"><img alt="alt-text-here" src="img/a86a60f206ab59b0.png"></p>
+<h2 is-upgraded>File Path</h2>
+<pre><code>utils/zoom-api.js
+</code></pre>
+<h3 is-upgraded>Code Snippet</h3>
+<p>Update the body variable in the sendMessage function.</p>
+<pre><code>...
+ const body = {
+      account_id: &#34;YOUR_ACCOUNT_ID&#34;,,
+      &#34;content&#34;: {
+        &#34;head&#34;: {
+          &#34;text&#34;: &#34;Hello World&#34;,
+          &#34;style&#34;: { &#34;bold&#34;: true }
+        },
+        &#34;body&#34;: [
+          {
+            &#34;type&#34;: &#34;message&#34;,
+            &#34;text&#34;: message
+          },
+          {
+            &#34;type&#34;: &#34;actions&#34;,
+            &#34;items&#34;: [
+              {
+                &#34;text&#34;: &#34;Thumbsup&#34;,
+                &#34;value&#34;: &#34;thumbsup&#34;,
+                &#34;style&#34;: &#34;Thumbsup&#34;
+              },
+              {
+                &#34;text&#34;: &#34;Thumbsdown&#34;,
+                &#34;value&#34;: &#34;thumbsdown&#34;,
+                &#34;style&#34;: &#34;Thumbsdown&#34;
+              }
+            ]
+          }
+        ]
+      },
+      robot_jid: &#34;YOUR_ROBOT_JID&#34;,,
+      to_jid: &#34;YOUR_JID&#34;,,
+      user_jid: &#34;YOUR_USER_ID&#34;,
+
+    };
+</code></pre>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Reaction Handling" duration="0">
+        <pre><code>routes/zoom-webhookHandler.js
+</code></pre>
+<h3 is-upgraded>Code Snippet</h3>
+<pre><code> case &#39;interactive_message_actions&#39;  :
+        console.log(&#39;Processing interactive message action from Zoom Team Chat&#39;);
+        sendChatMessage(toJid, `You clicked a button with value: ${payload?.actionItem?.value || &#39;unknown&#39;}`);
+        break;
+</code></pre>
+<h2 is-upgraded>Test</h2>
+<ol type="1">
+<li>Click the thumsup button and you will now see the response.</li>
+</ol>
+<p class="image-container"><img alt="alt-text-here" src="img/bb7d20b229ea6492.png"></p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Replying to Messages with Anthropic API (Using Threads)" duration="0">
+        <h2 is-upgraded>Add Anthropic function</h2>
+<pre><code>utils/anthropic.js
+</code></pre>
+<h3 is-upgraded>Code Snippet</h3>
+<pre><code>// anthropic.js
+import dotenv from &#39;dotenv&#39;;
+import { sendChatMessage } from &#39;./zoom-api.js&#39;;
+
+dotenv.config();
+
+let conversationHistory = new Map();
+
+const ANTHROPIC_URL = &#39;https://api.anthropic.com/v1/messages&#39;;
+// ⚠️ Use a model your key actually has access to. Consider resolving via /v1/models at boot.
+const DEFAULT_MODEL = process.env.ANTHROPIC_MODEL || &#39;claude-3-5-sonnet-latest&#39;;
+
+function buildHeaders() {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) throw new Error(&#39;Missing ANTHROPIC_API_KEY in environment variables.&#39;);
+  if (!apiKey.startsWith(&#39;sk-ant-&#39;)) throw new Error(&#39;Invalid ANTHROPIC_API_KEY format. Should start with &#34;sk-ant-&#34;.&#39;);
+
+  return {
+    &#39;x-api-key&#39;: apiKey,
+    &#39;anthropic-version&#39;: &#39;2023-06-01&#39;,
+    &#39;Content-Type&#39;: &#39;application/json&#39;,
+  };
+}
+
+function buildRequestBody({ model, messages, stream }) {
+  return {
+    model,
+    max_tokens: 1000,
+    temperature: 0.7,
+    system:
+      &#39;You are a helpful AI assistant integrated with Zoom Team Chat. Provide concise, helpful responses to user questions and requests.&#39;,
+    messages,
+    stream,
+  };
+}
+
+/**
+ * Main entry point.
+ * @param {Object} payload - Zoom webhook payload containing toJid / message
+ * @param {Object} options - { stream?: boolean, onStreamChunk?: (chunk, soFar) =&gt; void }
+ */
+export async function callAnthropicAPI(payload, options = {}) {
+  const userJid = payload?.toJid;
+  if (!userJid) {
+    console.error(&#39;Error: payload.toJid is missing.&#39;);
+    return;
+  }
+
+  const { stream = true, onStreamChunk = null } = options;
+
+  try {
+    const headers = buildHeaders();
+
+    // Build conversation
+    const history = conversationHistory.get(userJid) || [];
+    const userMessage = { role: &#39;user&#39;, content: payload.cmd || payload.message || &#39;Hello&#39; };
+    history.push(userMessage);
+
+    const requestData = buildRequestBody({
+      model: DEFAULT_MODEL,
+      messages: history,
+      stream,
+    });
+
+    console.log(`Sending message to Anthropic (model=${DEFAULT_MODEL}, stream=${stream}) for user: ${userJid}`);
+
+    const completion = stream
+      ? await handleStreamingResponse(requestData, headers, userJid, payload, onStreamChunk)
+      : await handleNonStreamingResponse(requestData, headers, userJid, payload);
+
+    return completion;
+  } catch (error) {
+    console.error(&#39;Error in callAnthropicAPI:&#39;, error?.message || error);
+
+    try {
+      await sendChatMessage(
+        payload?.toJid,
+        &#39;Sorry, I hit an AI model error. I will be back shortly. (Check model access/config.)&#39;,
+        payload?.reply_to || null
+      );
+    } catch (sendError) {
+      console.error(&#39;Failed to send error message to user:&#39;, sendError?.message || sendError);
+    }
+
+    // Normalize Anthropic error logging
+    const status = error?.status ?? error?.response?.status;
+    const data = error?.response?.data ?? error?.message;
+    if (status) {
+      console.error(&#39;Anthropic API Error:&#39;, { status, data });
+      if (status === 401) console.error(&#39;Authentication failed. Check ANTHROPIC_API_KEY.&#39;);
+      if (status === 429) console.error(&#39;Rate limit exceeded.&#39;);
+      if (status === 400) console.error(&#39;Bad request (params/schema).&#39;);
+      if (status === 404) console.error(&#39;Model not found for your account/region.&#39;);
+    } else if (error?.request) {
+      console.error(&#39;No response from Anthropic API:&#39;, error.message);
+    }
+  }
+}
+
+/**
+ * Non-streaming path using native fetch.
+ */
+async function handleNonStreamingResponse(requestData, headers, userJid, payload) {
+  const response = await fetch(ANTHROPIC_URL, {
+    method: &#39;POST&#39;,
+    headers,
+    body: JSON.stringify({ ...requestData, stream: false }),
+  });
+
+  if (!response.ok) {
+    // try to read JSON, fall back to text
+    let errorData = {};
+    try {
+      errorData = await response.json();
+    } catch {
+      errorData = { message: await response.text() };
+    }
+    const error = new Error(`HTTP ${response.status}: ${response.statusText}`);
+    error.status = response.status;
+    error.response = { data: errorData };
+    throw error;
+  }
+
+  const data = await response.json();
+
+  if (!data?.content || !Array.isArray(data.content)) {
+    throw new Error(`Unexpected response from Anthropic API: ${JSON.stringify(data)}`);
+  }
+
+  const completion = data.content
+    .filter((b) =&gt; b.type === &#39;text&#39;)
+    .map((b) =&gt; b.text)
+    .join(&#39;\n&#39;)
+    .trim();
+
+  if (!completion) throw new Error(&#39;Empty response from Anthropic API&#39;);
+
+  // Append assistant message &amp; trim history
+  const history = conversationHistory.get(userJid) || [];
+  history.push({ role: &#39;assistant&#39;, content: completion });
+  conversationHistory.set(userJid, history.length &gt; 20 ? history.slice(-20) : history);
+
+  await sendChatMessage(userJid, completion, payload.reply_to || null);
+  console.log(&#39;Successfully sent response to Zoom Team Chat&#39;);
+
+  return completion;
+}
+
+/**
+ * Streaming path using native fetch + Web Streams.
+ * Parses Server-Sent Events (SSE): frames separated by blank line, with &#34;event:&#34; and &#34;data:&#34; lines.
+ */
+async function handleStreamingResponse(requestData, headers, userJid, payload, onStreamChunk) {
+  // IMPORTANT for SSE:
+  const sseHeaders = {
+    ...headers,
+    Accept: &#39;text/event-stream&#39;,
+  };
+
+  const response = await fetch(ANTHROPIC_URL, {
+    method: &#39;POST&#39;,
+    headers: sseHeaders,
+    body: JSON.stringify({ ...requestData, stream: true }),
+  });
+
+  if (!response.ok) {
+    let errorData = {};
+    try {
+      errorData = await response.json();
+    } catch {
+      errorData = { message: await response.text() };
+    }
+    const error = new Error(`HTTP ${response.status}: ${response.statusText}`);
+    error.status = response.status;
+    error.response = { data: errorData };
+    throw error;
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buf = &#39;&#39;;
+  let completion = &#39;&#39;;
+
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buf += decoder.decode(value, { stream: true });
+
+      // SSE frames are separated by a blank line (\n\n)
+      let sep;
+      while ((sep = buf.indexOf(&#39;\n\n&#39;)) !== -1) {
+        const frame = buf.slice(0, sep);
+        buf = buf.slice(sep + 2);
+
+        let eventType = &#39;&#39;;
+        let dataLine = &#39;&#39;;
+
+        for (const line of frame.split(&#39;\n&#39;)) {
+          if (line.startsWith(&#39;event:&#39;)) eventType = line.slice(6).trim();
+          else if (line.startsWith(&#39;data:&#39;)) dataLine += line.slice(5).trim();
+        }
+
+        if (!dataLine) continue;
+        if (dataLine === &#39;[DONE]&#39;) {
+          // Some providers use this sentinel; Anthropic also sends message_stop events
+          continue;
+        }
+
+        try {
+          const parsed = JSON.parse(dataLine);
+
+          // Anthropic streaming lifecycle:
+          // - content_block_start
+          // - content_block_delta (delta.type === &#39;text_delta&#39;, delta.text)
+          // - content_block_stop
+          // - message_stop
+          if (parsed.type === &#39;content_block_delta&#39; &amp;&amp; parsed.delta?.type === &#39;text_delta&#39;) {
+            const chunk = parsed.delta.text || &#39;&#39;;
+            if (chunk) {
+              completion += chunk;
+              onStreamChunk?.(chunk, completion);
+            }
+          }
+
+          if (parsed.type === &#39;message_stop&#39; || eventType === &#39;message_stop&#39;) {
+            // End of message
+            // Clear buf in case anything remains
+            buf = &#39;&#39;;
+          }
+        } catch {
+          // Ignore malformed pieces
+        }
+      }
+    }
+  } finally {
+    try {
+      reader.releaseLock();
+    } catch {}
+  }
+
+  if (!completion.trim()) {
+    throw new Error(&#39;Empty response from Anthropic streaming API&#39;);
+  }
+
+  // Append assistant message &amp; trim history
+  const history = conversationHistory.get(userJid) || [];
+  history.push({ role: &#39;assistant&#39;, content: completion });
+  conversationHistory.set(userJid, history.length &gt; 20 ? history.slice(-20) : history);
+
+  // Send the full completion to Zoom (the streaming UI can also show partials via onStreamChunk)
+  await sendChatMessage(userJid, completion, payload.reply_to || null);
+  console.log(&#39;Successfully sent streaming response to Zoom Team Chat&#39;);
+
+  return completion;
+}
+
+export async function callAnthropicAPIStreaming(payload, onStreamChunk) {
+  return callAnthropicAPI(payload, {
+    stream: true,
+    onStreamChunk,
+  });
+}
+
+export function clearConversationHistory(userJid) {
+  conversationHistory.delete(userJid);
+  console.log(`Cleared conversation history for user: ${userJid}`);
+}
+
+export function getConversationHistory(userJid) {
+  return conversationHistory.get(userJid) || [];
+}
+
+</code></pre>
+<h2 is-upgraded>Update Webhook bot notification</h2>
+<pre><code>routes/zoom-webhookHandler.js
+</code></pre>
+<h3 is-upgraded>Code Snippet</h3>
+<pre><code>import { callAnthropicAPI } from &#39;../utils/anthropic.js&#39;;
+
+...
+  case &#39;bot_notification&#39;:
+        console.log(&#39;Processing bot notification from Zoom Team Chat&#39;);
+        
+        await callAnthropicAPI(payload, true);
+        break;
+</code></pre>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="App Shortcuts" duration="0">
+        <p class="image-container"><img alt="alt-text-here" src="img/d958e4a7ec478f7.png"></p>
+<p class="image-container"><img alt="alt-text-here" src="img/dd082bae6b8bc384.png"></p>
+<p class="image-container"><img alt="alt-text-here" src="img/b50c668021cc1703.png"></p>
+<h2 is-upgraded>Add headers to server.js</h2>
+<h3 is-upgraded>Install Helmet</h3>
+<pre><code>npm install &#39;helmet&#39;
+
+</code></pre>
+<h3 is-upgraded>File Path</h3>
+<pre><code>server.js
+</code></pre>
+<h3 is-upgraded>Code Snippet</h3>
+<pre><code>app.use(helmet({
+  contentSecurityPolicy: {
+    useDefaults: true,
+    directives: {
+      defaultSrc: [&#34;&#39;self&#39;&#34;],
+      scriptSrc: [
+        &#34;&#39;self&#39;&#34;,
+        &#34;&#39;unsafe-inline&#39;&#34;,
+        &#34;https://appssdk.zoom.us&#34;,
+        &#34;https://source.zoom.us&#34;,
+        &#34;https://cdn.jsdelivr.net&#34;,     // ⬅️ allow jsDelivr (Chart.js CDN)
+        &#34;https://cdn.ngrok.com&#34;
+      ],
+      styleSrc: [&#34;&#39;self&#39;&#34;, &#34;&#39;unsafe-inline&#39;&#34;, &#34;https://cdn.ngrok.com&#34;],
+      fontSrc:  [&#34;&#39;self&#39;&#34;, &#34;data:&#34;, &#34;https://cdn.ngrok.com&#34;],
+      imgSrc:   [&#34;&#39;self&#39;&#34;, &#34;data:&#34;, &#34;blob:&#34;],
+      connectSrc: [
+        &#34;&#39;self&#39;&#34;, &#34;wss:&#34;,
+        &#34;https://zoom.us&#34;, &#34;https://*.zoom.us&#34;,
+        &#34;https://*.ngrok.app&#34;, &#34;https://*.ngrok.io&#34;
+      ],
+      frameAncestors: [&#34;&#39;self&#39;&#34;, &#34;https://*.zoom.us&#34;],   // add this
+    },
+  },
+}));
+</code></pre>
+<h2 is-upgraded>Add webview</h2>
+<h3 is-upgraded>File Path</h3>
+<pre><code>views/webview.html
+</code></pre>
+<h3 is-upgraded>Code Snippet</h3>
+<pre><code>&lt;p&gt;Some text&lt;/p&gt;
+
+&lt;button&gt;Some actions&lt;/button&gt;
+</code></pre>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Apps SDK" duration="0">
+        <p class="image-container"><img alt="alt-text-here" src="img/a23a1d1392ee9c1.png"></p>
+<h3 is-upgraded>File Path</h3>
+<pre><code>views/webview.html
+</code></pre>
+<h3 is-upgraded>Code Snippet</h3>
+<pre><code>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+  &lt;head&gt;
+    &lt;meta charset=&#34;utf-8&#34; /&gt;
+    &lt;title&gt;Zoom Workplace Chatbot Demo&lt;/title&gt;
+
+    &lt;!-- ✅ Public script (global zoomSdk) --&gt;
+    &lt;script src=&#34;https://appssdk.zoom.us/sdk.min.js&#34; defer&gt;&lt;/script&gt;
+
+    &lt;style&gt;
+      body {
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+        margin: 24px;
+        max-width: 600px;
+        background: #f8f9fa;
+      }
+      h1 {
+        margin-bottom: 20px;
+        color: #333;
+        text-align: center;
+      }
+      .demo-container {
+        background: white;
+        padding: 24px;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+      }
+      .form-group {
+        margin-bottom: 20px;
+      }
+      label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #555;
+      }
+      textarea {
+        width: 100%;
+        min-height: 120px;
+        padding: 12px;
+        border: 2px solid #e1e5e9;
+        border-radius: 8px;
+        font-family: inherit;
+        font-size: 14px;
+        resize: vertical;
+        box-sizing: border-box;
+      }
+      textarea:focus {
+        outline: none;
+        border-color: #0e72ed;
+      }
+      .button-group {
+        display: flex;
+        gap: 12px;
+        margin-top: 20px;
+      }
+      button {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        font-size: 14px;
+        transition: background-color 0.2s;
+      }
+      .btn-primary {
+        background: #0e72ed;
+        color: white;
+        flex: 1;
+      }
+      .btn-primary:hover {
+        background: #0c5fbb;
+      }
+      .btn-secondary {
+        background: #6c757d;
+        color: white;
+        flex: 1;
+      }
+      .btn-secondary:hover {
+        background: #545b62;
+      }
+      .status {
+        padding: 12px;
+        border-radius: 8px;
+        margin-top: 16px;
+        text-align: center;
+        font-weight: 500;
+      }
+      .success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+      .error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f1b0b7;
+      }
+      .info {
+        background: #cce7ff;
+        color: #004085;
+        border: 1px solid #99d3ff;
+      }
+      .hint {
+        color: #666;
+        font-size: 13px;
+        margin-top: 8px;
+        font-style: italic;
+      }
+      .context-section {
+        background: #f8f9fa;
+        padding: 16px;
+        border-radius: 8px;
+        margin-top: 20px;
+        border: 1px solid #e1e5e9;
+      }
+      .context-title {
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 12px;
+        font-size: 16px;
+      }
+      .context-item {
+        background: white;
+        padding: 12px;
+        border-radius: 6px;
+        margin-bottom: 10px;
+        border-left: 4px solid #0e72ed;
+      }
+      .context-item h4 {
+        margin: 0 0 8px 0;
+        color: #0e72ed;
+        font-size: 14px;
+      }
+      .context-content {
+        font-family: &#34;Courier New&#34;, monospace;
+        font-size: 12px;
+        color: #666;
+        background: #f8f9fa;
+        padding: 8px;
+        border-radius: 4px;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+      .not-in-zoom {
+        text-align: center;
+        padding: 40px 24px;
+        color: #721c24;
+        background: #f8d7da;
+        border: 1px solid #f1b0b7;
+        border-radius: 12px;
+        margin: 20px 0;
+      }
+      .not-in-zoom h2 {
+        color: #721c24;
+        margin-bottom: 16px;
+      }
+    &lt;/style&gt;
+  &lt;/head&gt;
+
+  &lt;body&gt;
+    &lt;div id=&#34;not-in-zoom-message&#34; class=&#34;not-in-zoom&#34; style=&#34;display: none&#34;&gt;
+      &lt;h2&gt;⚠️ Zoom Client Required&lt;/h2&gt;
+      &lt;p&gt;
+        This page is designed to run inside the Zoom desktop or mobile client.
+      &lt;/p&gt;
+      &lt;p&gt;
+        Please open this URL from within a Zoom chat or meeting to access the
+        full functionality.
+      &lt;/p&gt;
+    &lt;/div&gt;
+
+    &lt;div id=&#34;main-content&#34;&gt;
+      &lt;h1&gt;🚀 Zoom Workplace Chatbot Demo&lt;/h1&gt;
+
+      &lt;div class=&#34;demo-container&#34;&gt;
+        &lt;div class=&#34;form-group&#34;&gt;
+          &lt;label for=&#34;messageInput&#34;&gt;Custom Message&lt;/label&gt;
+          &lt;textarea
+            id=&#34;messageInput&#34;
+            placeholder=&#34;Type your message here to send to the chat...&#34;
+          &gt;&lt;/textarea&gt;
+          &lt;div class=&#34;hint&#34;&gt;
+            Enter any text you want to send as a message to the current chat
+          &lt;/div&gt;
+        &lt;/div&gt;
+
+        &lt;div class=&#34;button-group&#34;&gt;
+          &lt;button id=&#34;sendCustomBtn&#34; class=&#34;btn-primary&#34;&gt;
+            Send Custom Message
+          &lt;/button&gt;
+          &lt;button id=&#34;sendContextBtn&#34; class=&#34;btn-secondary&#34;&gt;
+            Send Chat Context
+          &lt;/button&gt;
+        &lt;/div&gt;
+
+        &lt;div class=&#34;hint&#34; style=&#34;text-align: center; margin-top: 16px&#34;&gt;
+          This demo shows how Zoom Apps can interact with chat conversations
+        &lt;/div&gt;
+      &lt;/div&gt;
+
+      &lt;div class=&#34;context-section&#34;&gt;
+        &lt;div class=&#34;context-title&#34;&gt;📊 Context Information&lt;/div&gt;
+        &lt;div class=&#34;context-item&#34;&gt;
+          &lt;h4&gt;Running Context&lt;/h4&gt;
+          &lt;div id=&#34;runningContext&#34; class=&#34;context-content&#34;&gt;Not available&lt;/div&gt;
+        &lt;/div&gt;
+        &lt;div class=&#34;context-item&#34;&gt;
+          &lt;h4&gt;Chat Context&lt;/h4&gt;
+          &lt;div id=&#34;chatContext&#34; class=&#34;context-content&#34;&gt;Not available&lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+
+      &lt;div id=&#34;status&#34;&gt;&lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;script&gt;
+      /* globals zoomSdk */
+
+      let isInitialized = false;
+      let chatContext = null;
+      let runningContext = null;
+
+      // Helper to show status messages
+      function showStatus(message, type = &#34;info&#34;) {
+        const statusDiv = document.getElementById(&#34;status&#34;);
+        statusDiv.innerHTML = `&lt;div class=&#34;status ${type}&#34;&gt;${message}&lt;/div&gt;`;
+        setTimeout(() =&gt; (statusDiv.innerHTML = &#34;&#34;), 3000);
+      }
+
+      // Helper to update context displays
+      function updateContextDisplays() {
+        const runningContextEl = document.getElementById(&#34;runningContext&#34;);
+        const chatContextEl = document.getElementById(&#34;chatContext&#34;);
+
+        if (runningContext) {
+          runningContextEl.textContent = JSON.stringify(
+            runningContext,
+            null,
+            2
+          );
+        }
+
+        if (chatContext) {
+          chatContextEl.textContent = JSON.stringify(chatContext, null, 2);
+        }
+      }
+
+      // Check if running in Zoom client
+      function checkZoomEnvironment() {
+        if (typeof window.zoomSdk === &#34;undefined&#34;) {
+          document.getElementById(&#34;not-in-zoom-message&#34;).style.display =
+            &#34;block&#34;;
+          document.getElementById(&#34;main-content&#34;).style.display = &#34;none&#34;;
+          return false;
+        }
+        return true;
+      }
+
+      // Helper to get signature from your backend
+      async function generateSignature(messageString) {
+        const res = await fetch(&#34;/api/sign&#34;, {
+          method: &#34;POST&#34;,
+          headers: { &#34;Content-Type&#34;: &#34;application/json&#34; },
+          body: JSON.stringify({ message: messageString }),
+        });
+        if (!res.ok) throw new Error(&#34;Signature request failed: &#34; + res.status);
+        return res.json();
+      }
+
+      // Send custom message function
+      async function sendCustomMessage() {
+        const messageInput = document.getElementById(&#34;messageInput&#34;);
+        const message = messageInput.value.trim();
+
+        if (!message) {
+          showStatus(&#34;Please enter a message first&#34;, &#34;error&#34;);
+          return;
+        }
+
+        if (!isInitialized) {
+          showStatus(&#34;Zoom SDK not initialized yet&#34;, &#34;error&#34;);
+          return;
+        }
+
+        try {
+          showStatus(&#34;Sending message...&#34;, &#34;info&#34;);
+
+          await zoomSdk.sendMessageToChat({
+            message: message,
+          });
+
+          showStatus(&#34;✅ Message sent successfully!&#34;, &#34;success&#34;);
+          messageInput.value = &#34;&#34;; // Clear the input
+          window.close();
+        } catch (error) {
+          console.error(&#34;Send message error:&#34;, error);
+          showStatus(&#34;❌ Failed to send message&#34;, &#34;error&#34;);
+        }
+      }
+
+      // Send chat context function
+      async function sendChatContext() {
+        if (!isInitialized) {
+          showStatus(&#34;Zoom SDK not initialized yet&#34;, &#34;error&#34;);
+          return;
+        }
+
+        if (!chatContext) {
+          showStatus(&#34;No chat context available&#34;, &#34;error&#34;);
+          return;
+        }
+
+        try {
+          showStatus(&#34;Sending chat context...&#34;, &#34;info&#34;);
+
+          const contextMessage = `Chat Context Info:
+📧 Chat Type: ${chatContext.chatType || &#34;Unknown&#34;}
+👥 Participants: ${chatContext.participants?.length || 0}
+💬 Content: ${chatContext.content || &#34;No content&#34;}`;
+
+          await zoomSdk.sendMessageToChat({
+            message: contextMessage,
+          });
+
+          showStatus(&#34;✅ Chat context sent successfully!&#34;, &#34;success&#34;);
+          window.close();
+        } catch (error) {
+          console.error(&#34;Send context error:&#34;, error);
+          showStatus(&#34;❌ Failed to send chat context&#34;, &#34;error&#34;);
+        }
+      }
+
+      
+
+      // Initialize the Zoom SDK
+      async function init() {
+        if (!checkZoomEnvironment()) {
+          return;
+        }
+
+        try {
+          showStatus(&#34;🔄 Initializing Zoom SDK...&#34;, &#34;info&#34;);
+
+          const capabilities = [
+            &#34;getRunningContext&#34;,
+            &#34;getChatContext&#34;,
+            &#34;sendMessageToChat&#34;,
+          ];
+
+          const appInfo = await zoomSdk.config({
+            version: &#34;0.16.26&#34;,
+            capabilities,
+          });
+
+          // Get running context
+          runningContext = await zoomSdk.getRunningContext();
+
+          // Get chat context if in chat
+          if (appInfo.runningContext === &#34;inChat&#34;) {
+            chatContext = await zoomSdk.getChatContext();
+            isInitialized = true;
+            showStatus(&#34;✅ Ready! You can now send messages.&#34;, &#34;success&#34;);
+          } else {
+            showStatus(
+              &#34;⚠️ This app works best when opened from a chat&#34;,
+              &#34;error&#34;
+            );
+          }
+
+          // Update context displays
+          updateContextDisplays();
+        } catch (error) {
+          console.error(&#34;Initialization failed:&#34;, error);
+          showStatus(&#34;❌ Failed to initialize Zoom SDK&#34;, &#34;error&#34;);
+        }
+      }
+
+      // Event listeners
+      window.addEventListener(&#34;DOMContentLoaded&#34;, () =&gt; {
+        init();
+
+        document
+          .getElementById(&#34;sendCustomBtn&#34;)
+          .addEventListener(&#34;click&#34;, sendCustomMessage);
+        document
+          .getElementById(&#34;sendContextBtn&#34;)
+          .addEventListener(&#34;click&#34;, sendChatContext);
+
+        // Allow Enter key to send message
+        document
+          .getElementById(&#34;messageInput&#34;)
+          .addEventListener(&#34;keydown&#34;, (e) =&gt; {
+            if (e.key === &#34;Enter&#34; &amp;&amp; !e.shiftKey) {
+              e.preventDefault();
+              sendCustomMessage();
+            }
+          });
+      });
+    &lt;/script&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+
+</code></pre>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Add App To Team Chat Channel" duration="0">
+        <h3 is-upgraded>File Path</h3>
+<pre><code>routes/zoom-webhookHandler.js
+</code></pre>
+<h3 is-upgraded>Code Snippet</h3>
+<pre><code>Need Code Snippet
+</code></pre>
+<h2 is-upgraded>Resources</h2>
+<ul>
+<li><a href="https://developers.zoom.us/docs/team-chat/app-shortcuts-and-apps-sdk/" target="_blank">App shortcuts and Apps SDK</a></li>
+</ul>
+<h2 is-upgraded>Account Setting: Enable Add App to Channel</h2>
+<ol type="1">
+<li>Navigate to the portal</li>
+<li>On Account Managment/ Account Setting/ Team Chat, toggle flag<img alt="Image 0" src="img/4343bfa2bb2f237b.png"></li>
+</ol>
+<h2 is-upgraded>Add to Channel Marketplace Configurations</h2>
+<h3 is-upgraded>Add Scopes:</h3>
+<ol type="1">
+<li>Navigate to the Scope tab</li>
+<li>Add Chatbot Scope:<ul>
+<li>Enable Chatbot within Zoom Team Chat Channel</li>
+</ul>
+</li>
+</ol>
+<h3 is-upgraded>Event Subscription</h3>
+<ol type="1">
+<li>Navigate to the Access tab</li>
+<li>Select the following scopes:<ul>
+<li>Team Chat Channel Chatbot Add</li>
+<li>Team Chat Channel Chatbot Removed</li>
+</ul>
+</li>
+<li>Not Added but will events automatically sent:<ul>
+<li>team_chat.app_invited</li>
+<li>team_chat.app_removed</li>
+<li>team_chat.app_mention</li>
+<li>team_chat.app_conversation_opened</li>
+</ul>
+</li>
+<li>Added Webhook Endpoint URL:</li>
+</ol>
+<pre><code>https://example.ngrok.app/anthropic
+</code></pre>
+<h2 is-upgraded>Add to Channel Steps</h2>
+<p class="image-container"><img alt="Image 1" src="img/111f5553763ca043.png"></p>
+<p class="image-container"><img alt="Image 2" src="img/c75ab6e30475ee88.png"></p>
+<p class="image-container"><img alt="Image 3" src="img/c57ccef1e79ad0be.png"></p>
+<p class="image-container"><img alt="Image 4" src="img/4eb4446d9a0785d3.png"></p>
+<p class="image-container"><img alt="Image 5" src="img/92b4c20f3f1b8908.png"></p>
+<h2 is-upgraded>Resources</h2>
+<ol type="1">
+<li><a href="https://support.zoom.com/hc/en/article?id=zm_kb&sysparm_article=KB0082265" target="_blank">Using Apps in chats</a></li>
+</ol>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="What&#39;s next ?" duration="0">
+        
+
+      </google-codelab-step>
+    
+  </google-codelab>
+
+  <script src="https://storage.googleapis.com/claat-public/native-shim.js"></script>
+  <script src="https://storage.googleapis.com/claat-public/custom-elements.min.js"></script>
+  <script src="https://storage.googleapis.com/claat-public/prettify.js"></script>
+  <script src="https://storage.googleapis.com/claat-public/codelab-elements.js"></script>
+  <script src="//support.google.com/inapp/api.js"></script>
+
+</body>
+</html>
