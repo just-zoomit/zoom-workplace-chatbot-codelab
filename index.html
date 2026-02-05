@@ -57,9 +57,6 @@
 <tr><td colspan="1" rowspan="1"><p><strong>Replying to Messages (Using Threads)</strong></p>
 </td><td colspan="1" rowspan="1"><p>Learn how to reply to specific Zoom Team Chat messages using threaded replies. This tutorial shows how to nest responses under a parent message using the<code>reply_to</code>parameter in Node.js or Python.</p>
 </td></tr>
-<tr><td colspan="1" rowspan="1"><p><strong>Scheduling Messages</strong></p>
-</td><td colspan="1" rowspan="1"><p>Learn how to schedule messages in Zoom Team Chat using Python or Node.js. We&#39;ll walk through queuing messages for future delivery, listing scheduled messages, and canceling pending ones.</p>
-</td></tr>
 <tr><td colspan="1" rowspan="1"><p><strong>Apps in Chat</strong></p>
 </td><td colspan="1" rowspan="1"><p>Learn how to add a Chatbot to a Team Chat channel. This tutorial shows how to detect Chatbot events and responses.</p>
 </td></tr>
@@ -105,27 +102,133 @@
 
       </google-codelab-step>
     
+      <google-codelab-step label="Overview: Zoom Team Chat Vs. Chatbot APIs" duration="0">
+        <p>Zoom offers two powerful ways to extend Team Chat functionality: Team Chat APIs and Chatbot APIs. While both interact with Zoom Team Chat, they use different authentication mechanisms and are designed for distinct use cases.</p>
+<p>In this part of the tutorial, we&#39;ll start by implementing Chatbot functionality, which uses a unique access token that does not require a refresh token—making it ideal for lightweight, event-driven interactions.</p>
+<p>Chatbots are especially effective for keeping teams in sync and up to date, whether by posting reminders, surfacing action items, or responding to slash commands. To demonstrate this, we&#39;ll integrate Chatbot APIs into the Add Activity modal, enabling real-time task updates directly in chat.</p>
+<p>Before diving in, let&#39;s look at the key differences and use cases in the table below:</p>
+<h2 is-upgraded>🔍 <strong>Zoom Team Chat APIs vs. Zoom Chatbot APIs</strong></h2>
+<table>
+<tr><td colspan="1" rowspan="1"><p><strong>Category</strong></p>
+</td><td colspan="1" rowspan="1"><p><strong>Zoom Team Chat APIs</strong></p>
+</td><td colspan="1" rowspan="1"><p><strong>Zoom Chatbot APIs</strong></p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p><strong>API Type</strong></p>
+</td><td colspan="1" rowspan="1"><p>REST API (part of Zoom&#39;s broader API platform)</p>
+</td><td colspan="1" rowspan="1"><p>Specialized API for building Zoom Team Chat bots</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p><strong>Access Token Type</strong></p>
+</td><td colspan="1" rowspan="1"><p>OAuth 2.0 access token (with <strong>refresh token</strong>)</p>
+</td><td colspan="1" rowspan="1"><p><strong>Chatbot access token</strong> (no refresh token; short-lived)</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p><strong>Token Expiry</strong></p>
+</td><td colspan="1" rowspan="1"><p>Access token expires in 1 hour; refresh token used to renew</p>
+</td><td colspan="1" rowspan="1"><p>Expires in 1 hour; must <strong>request a new token manually</strong></p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p><strong>Best For</strong></p>
+</td><td colspan="1" rowspan="1"><p>Backend integrations, user-level or account-level operations</p>
+</td><td colspan="1" rowspan="1"><p>Real-time bot interactions in Zoom Team Chat</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p><strong>Installation</strong></p>
+</td><td colspan="1" rowspan="1"><p>OAuth flow required (user or admin consent)</p>
+</td><td colspan="1" rowspan="1"><p>Installed via Zoom Marketplace as a Chatbot</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p><strong>Bot Mention Trigger</strong></p>
+</td><td colspan="1" rowspan="1"><p>Not supported</p>
+</td><td colspan="1" rowspan="1"><p>Yes – Bots can listen and respond when @mentioned</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p><strong>Can Post to Channel</strong></p>
+</td><td colspan="1" rowspan="1"><p>Yes, using user token</p>
+</td><td colspan="1" rowspan="1"><p>Yes, using bot JID and Chatbot token</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p><strong>Can Read Messages</strong></p>
+</td><td colspan="1" rowspan="1"><p>Yes, with appropriate scopes</p>
+</td><td colspan="1" rowspan="1"><p>Only if the message is addressed to or from the bot</p>
+</td></tr>
+</table>
+<p> ---- </p>
+<h2 is-upgraded>🧩 Typical Use Cases: Zoom Team Chat API vs. Zoom Chatbot API</h2>
+<table>
+<tr><td colspan="1" rowspan="1"><p><strong>Use Case</strong></p>
+</td><td colspan="1" rowspan="1"><p><strong>Zoom Team Chat API</strong></p>
+</td><td colspan="1" rowspan="1"><p><strong>Zoom Chatbot API</strong></p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p>Send messages to a chat/channel</p>
+</td><td colspan="1" rowspan="1"><p>✅ Yes (on behalf of user or system)</p>
+</td><td colspan="1" rowspan="1"><p>✅ Yes (as the bot)</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p>Respond to @mentions in chat</p>
+</td><td colspan="1" rowspan="1"><p>✅ Yes</p>
+</td><td colspan="1" rowspan="1"><p>✅ Yes</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p>Handle slash commands</p>
+</td><td colspan="1" rowspan="1"><p>❌ Not supported</p>
+</td><td colspan="1" rowspan="1"><p>✅ Yes</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p>Post interactive message elements (buttons, menus)</p>
+</td><td colspan="1" rowspan="1"><p>❌ Not supported</p>
+</td><td colspan="1" rowspan="1"><p>✅ Yes</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p>Read chat messages</p>
+</td><td colspan="1" rowspan="1"><p>✅ Yes (with scopes)</p>
+</td><td colspan="1" rowspan="1"><p>✅ Only if sent to/from bot</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p>Manage channels (create, invite, remove users)</p>
+</td><td colspan="1" rowspan="1"><p>✅ Yes</p>
+</td><td colspan="1" rowspan="1"><p>❌ Not supported</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p>Receive event notifications (webhooks)</p>
+</td><td colspan="1" rowspan="1"><p>✅ Via Zoom Event Subscriptions</p>
+</td><td colspan="1" rowspan="1"><p>✅ Via Chatbot Event Triggers</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p>File sharing in chat</p>
+</td><td colspan="1" rowspan="1"><p>✅ Yes</p>
+</td><td colspan="1" rowspan="1"><p>✅ Yes</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p>System-level task notifications</p>
+</td><td colspan="1" rowspan="1"><p>✅ Yes</p>
+</td><td colspan="1" rowspan="1"><p>✅ Yes</p>
+</td></tr>
+</table>
+
+
+      </google-codelab-step>
+    
       <google-codelab-step label="Set up your development environment" duration="2">
-        <p>This codelab provides the app&#39;s starter codebase. You can clone that repo and follow the steps to get started:</p>
+        <p>This guide provides the app&#39;s starter codebase. You can clone that repo and follow the steps to get started:</p>
 <h2 is-upgraded>Starter Application</h2>
 <pre><code>https://github.com/just-zoomit/zoomworkplace-chatbot -- starter-app
 
 </code></pre>
-<h2 is-upgraded>Create a Zoom Workplace Team Chat Chatbot app with the App Manifest API</h2>
-<p>This guide shows how to create a Zoom Team Chatbot app using the <strong>App Manifest API</strong>.</p>
+<h2 is-upgraded>Create and configure Marketplace App</h2>
+<h2 is-upgraded>1. Create an OAuth app</h2>
+<p>👉 <a href="https://marketplace.zoom.us/develop/create" target="_blank"><strong>Click here to create an app on the Zoom App Marketplace</strong></a></p>
 <ul>
-<li>First, add the following marketplace scopes:<ul>
+<li>Select <strong>General app</strong> and click <strong>Create</strong>.</li>
+</ul>
+<p>[!NOTE] Take note of your app ID in the URL after app creation – you will need it to later on.</p>
+<h2 is-upgraded>2. Retrieve app credentials</h2>
+<ul>
+<li>Click <strong>Manage</strong> &gt; your app</li>
+<li>Navigate to <strong>Basic Information</strong> &gt; <strong>App Credentials</strong></li>
+</ul>
+<p>[!Note] Use these credentials for <a href="https://developers.zoom.us/docs/integrations/oauth/" target="_blank">authorization</a>.</p>
+<h2 is-upgraded>3. Add required scopes</h2>
+<p>On the Scope page, select the following:</p>
+<ul>
 <li>Create apps: marketplace:write:app</li>
 <li>View an app: marketplace:read:app</li>
 </ul>
-</li>
-<li>Use the <a href="https://developers.zoom.us/docs/api/marketplace/#tag/manifest/put/marketplace/apps/%7BappId%7D/manifest" target="_blank">Update an app by manifest</a> endpoint to quickly configure a Zoom Marketplace app.</li>
-<li>Replace <code>example.ngrok.app</code> with your actual ngrok domain when testing locally.</li>
-</ul>
-<h2 is-upgraded>Endpoint</h2>
-<pre><code language="language-http" class="language-http">PUT /marketplace/apps/{appId}/manifest
+<h2 is-upgraded>4. Update the app using the Manifest API</h2>
+<p>Use the following endpoint to quickly configure a Zoom Marketplace app:</p>
+<p><strong>Example request:</strong></p>
+<pre><code>PUT /marketplace/apps/{appId}/manifest
 </code></pre>
-<h2 is-upgraded>App Manifest JSON object</h2>
+<p>👉 <a href="https://developers.zoom.us/docs/api/marketplace/#tag/manifest/put/marketplace/apps/%7BappId%7D/manifest" target="_blank">Update an app by manifest API endpoint</a></p>
+<h2 is-upgraded>5. Use Manifest JSON object to create Zoom App</h2>
+<p>Use an API tool like Postman to send a PUT request to the manifest endpoint with the JSON object below as the request body.</p>
+<p>[!NOTE] Replace placeholder URLs like <code>https://example.ngrok.io</code> with your actual tunnel URL (e.g., from ngrok).</p>
+<h2 is-upgraded>App Manifest JSON object - (Request body)</h2>
 <pre><code language="language-json" class="language-json">{
     &#34;manifest&#34;: {
         &#34;display_information&#34;: {
@@ -236,6 +339,34 @@
     }
 }
 </code></pre>
+<h2 is-upgraded>Set up credentials</h2>
+<p>After configuring your Zoom Marketplace app, add the required values to your environment variables:</p>
+<ul>
+<li>Navigate to <strong>Basic Information</strong> to get your <code>Client Id</code> and <code>Client Secret</code>.</li>
+<li>Ensure the app is marked as <em>User-managed</em> under <strong>Basic Information</strong>.</li>
+<li>Go to <strong>Features → Access</strong> to find your <code>Secret Token</code>.</li>
+<li>Go to <strong>Surface → Team Chat Subscription</strong> to find your <code>Bot JID</code></li>
+</ul>
+<p>Update the following variables in your <code>.env</code> file:</p>
+<pre><code language="language-bash" class="language-bash"># Zoom app credentials
+ZOOM_CLIENT_ID=your_zoom_client_id
+ZOOM_CLIENT_SECRET=your_zoom_client_secret
+ZOOM_CHANNEL_ID=your_zoom_channel_id
+
+# Zoom account ID
+ACCOUNT_ID=your_account_id
+
+# MongoDB configuration
+MONGO_URI=your_mongodb_connection_string
+
+# Zoom bot JIDs (from Marketplace app settings)
+ZOOM_ROBOT_JID=your_zoom_robot_jid
+ZOOM_USER_JID=your_zoom_user_jid
+
+# Server configuration (optional)
+PORT=3000
+</code></pre>
+<p>:warning: <strong>Do not store credentials in plain text in production environments</strong></p>
 
 
       </google-codelab-step>
@@ -288,6 +419,32 @@
 </td><td colspan="1" rowspan="1"><p>Primary documentation for the tutorial. Explains setup, environment configuration, and the learning objectives of each section.</p>
 </td></tr>
 </table>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Authenticate with Zoom Team Chat" duration="0">
+        <p>To interact with the Zoom Team Chat API, all requests must be authorized using OAuth 2.0. Each API request must include a <code>Bearer</code> token in the <code>Authorization</code> header. Zoom supports industry-standard OAuth 2.0 (RFC 6749) flows for securely handling access and refresh tokens.</p>
+<p>Unlike chatbots, where you <a href="https://developers.zoom.us/docs/team-chat/installation-and-authentication/#request-chatbot-token" target="_blank">request a new token</a> for each interaction, Zoom Team Chat integrations require secure token storage and lifecycle management. Through the OAuth 2.0 flow, the authorization code provided in the redirect URL enables the use of the <code>authorization_code</code> grant type to access additional Zoom API endpoints.</p>
+<p>Your app must be able to:</p>
+<ul>
+<li>Request, refresh, and revoke tokens based on the selected OAuth flow</li>
+<li>Securely store tokens</li>
+<li>Periodically renew or refresh tokens before expiration</li>
+</ul>
+<p>In this section, you&#39;ll integrate the Zoom Team Chat API into a Zoom Team Chatbot app built with Node.js and Express.</p>
+<p>By the end of this section, you&#39;ll have:</p>
+<ul>
+<li>A working Zoom Team Chat integration</li>
+<li>A foundation for sending and customizing team chat messages</li>
+<li>Reusable server endpoints for future messaging features</li>
+</ul>
+<h2 is-upgraded>Resources</h2>
+<ul>
+<li><a href="https://developers.zoom.us/docs/team-chat/installation-and-authentication/" target="_blank">Team Chat: Installation and Authorize</a></li>
+<li><a href="https://developers.zoom.us/docs/integrations/oauth/" target="_blank">OAuth 2.0</a></li>
+<li><a href="https://developers.zoom.us/docs/integrations/end-user-auth/" target="_blank">End user authorization</a></li>
+</ul>
 
 
       </google-codelab-step>
