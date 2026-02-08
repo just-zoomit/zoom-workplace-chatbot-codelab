@@ -102,11 +102,13 @@
 
       </google-codelab-step>
     
-      <google-codelab-step label="Zoom Team Chat Vs. Chatbot APIs" duration="0">
-        <p>Zoom offers two powerful ways to extend Team Chat functionality: Team Chat APIs and Chatbot APIs. While both interact with Zoom Team Chat, they use different authentication mechanisms and are designed for distinct use cases.</p>
-<p>In this part of the tutorial, we&#39;ll start by implementing Chatbot functionality, which uses a unique access token that does not require a refresh token—making it ideal for lightweight, event-driven interactions.</p>
-<p>Chatbots are especially effective for keeping teams in sync and up to date, whether by posting reminders, surfacing action items, or responding to slash commands. To demonstrate this, we&#39;ll integrate Chatbot APIs into the Add Activity modal, enabling real-time task updates directly in chat.</p>
-<p>Before diving in, let&#39;s look at the key differences and use cases in the table below:</p>
+      <google-codelab-step label="Compare Zoom Team Chat and Chatbot APIs" duration="0">
+        <p>Zoom offers two powerful ways to extend Zoom Team Chat functionality: <strong>Team Chat APIs</strong> and <strong>Chatbot APIs</strong>. While both interact with Zoom Team Chat, they use different authentication methods and serve distinct use cases.</p>
+<p>In this section, you&#39;ll implement authentication and authorization flows for both approaches.</p>
+<p>To send messages using the <strong>Team Chat APIs</strong>, you&#39;ll implement OAuth 2.0. This allows you to request an account-level or user-level access token and call a wide range of API endpoints beyond Chatbot functionality. When the token expires, you can can use the <a href="https://developers.zoom.us/docs/integrations/oauth/#refresh-an-access-token" target="_blank">refresh token</a> to automatically refresh the access token.</p>
+<p>To interact with Zoom Team Chat using a <strong>Chatbot</strong>, you&#39;ll use a Chatbot access token. This token is short-lived (one hour) and does not require a refresh token, making it ideal for lightweight, event-driven applications. When the token expires, you can request a new one without a refresh flow.</p>
+<p>Chatbots are effective for keeping teams informed—whether by posting reminders, surfacing action items, or responding to slash commands.</p>
+<p>Before you begin implementation, review the table below for a comparison of each method&#39;s use cases and capabilities:</p>
 <h2 is-upgraded>🔍 <strong>Zoom Team Chat APIs vs. Zoom Chatbot APIs</strong></h2>
 <table>
 <tr><td colspan="1" rowspan="1"><p><strong>Category</strong></p>
@@ -432,13 +434,7 @@ PORT=3000
 <li>Securely store tokens</li>
 <li>Periodically renew or refresh tokens before expiration</li>
 </ul>
-<p>In this section, you&#39;ll integrate the Zoom Team Chat API into a Zoom Team Chatbot app built with Node.js and Express.</p>
-<p>By the end of this section, you&#39;ll have:</p>
-<ul>
-<li>A working Zoom Team Chat integration</li>
-<li>A foundation for sending and customizing team chat messages</li>
-<li>Reusable server endpoints for future messaging features</li>
-</ul>
+<p>In the next section, you&#39;ll extend a chatbot app built with Node.js and Express by implementing endpoints to authenticate users, manage OAuth tokens, and enable deep linking to the Zoom Team Chat chatbot in the Zoom desktop client.</p>
 <h2 is-upgraded>Resources</h2>
 <ul>
 <li><a href="https://developers.zoom.us/docs/team-chat/installation-and-authentication/" target="_blank">Team Chat: Installation and Authorize</a></li>
@@ -449,20 +445,37 @@ PORT=3000
 
       </google-codelab-step>
     
-      <google-codelab-step label="Authorize and Deep Linking" duration="0">
-        <p>In this section, you add OAuth 2.0 and Chatbot deep linking from the browser.</p>
-<h2 is-upgraded>OAuth 2.0</h2>
-<h3 is-upgraded>File Path</h3>
-<pre><code>routes/oauth-routes.js
+      <google-codelab-step label="Authorize and deep link users" duration="0">
+        <p>In this section, you&#39;ll implement the installation and authorization flows to install a chatbot in a Zoom workspace, authenticate API requests, and deep link users between a browser-based application and the Zoom desktop client. This enables seamless transitions from SaaS web apps to native collaboration environments where work happens.</p>
+<p>By the end of this section, you&#39;ll have:</p>
+<ul>
+<li>Secure Zoom Team Chat integration using OAuth 2.0</li>
+<li>Seamless deep linking between browser and Zoom client</li>
+<li>Reusable server endpoints for message delivery and future features</li>
+</ul>
+<h2 is-upgraded>Implement OAuth 2.0 authentication</h2>
+<p>Add two routes to handle the OAuth 2.0 flow: one to initiate login, and another to process the callback from Zoom.</p>
+<table>
+<tr><td colspan="1" rowspan="1"><p>Endpoint</p>
+</td><td colspan="1" rowspan="1"><p>Description</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p><code>/login</code></p>
+</td><td colspan="1" rowspan="1"><p>Redirects users to Zoom&#39;s OAuth consent screen using the app&#39;s client ID and redirect URI.</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p><code>/callback</code></p>
+</td><td colspan="1" rowspan="1"><p>Handles the redirect from Zoom, validates the <code>state</code> parameter, exchanges the authorization code for an access token, and stores tokens in the session for later use.</p>
+</td></tr>
+</table>
+<p><strong>File path:</strong></p>
+<pre><code language="language-bash" class="language-bash">routes/oauth-routes.js
 </code></pre>
-<h3 is-upgraded>Code Snippet</h3>
-<pre><code>import express from &#39;express&#39;;
+<pre><code language="language-js" class="language-js">import express from &#39;express&#39;;
 import crypto from &#39;crypto&#39;;
 import { buildBasicAuth, exchangeCodeForAccessToken } from &#39;../utils/zoom-api.js&#39;;
 
 const router = express.Router();
 
-// OAuth: start
+// Start OAuth flow
 router.get(&#39;/login&#39;, (req, res) =&gt; {
   try {
     const state = crypto.randomBytes(16).toString(&#39;hex&#39;);
@@ -475,7 +488,6 @@ router.get(&#39;/login&#39;, (req, res) =&gt; {
     });
 
     console.log(&#39;Redirecting to Zoom OAuth URL:&#39;, url);
-
     return res.redirect(url);
   } catch (e) {
     console.error(&#39;OAuth login error:&#39;, e);
@@ -483,7 +495,7 @@ router.get(&#39;/login&#39;, (req, res) =&gt; {
   }
 });
 
-// OAuth: callback
+// Handle Zoom OAuth callback
 router.get(&#39;/callback&#39;, async (req, res) =&gt; {
   try {
     const { code, state, error, error_description } = req.query;
@@ -492,9 +504,10 @@ router.get(&#39;/callback&#39;, async (req, res) =&gt; {
       console.warn(&#39;Zoom authorization error:&#39;, error, error_description);
       return res.status(400).send(`Authorization error: ${error}`);
     }
+
     if (!code || !state) return res.status(400).send(&#39;Missing code or state.&#39;);
     if (state !== req.session.oauth_state) return res.status(400).send(&#39;Invalid state.&#39;);
-    delete req.session.oauth_state; // one-time use
+    delete req.session.oauth_state; // One-time use
 
     const tokens = await exchangeCodeForAccessToken({
       code,
@@ -503,14 +516,14 @@ router.get(&#39;/callback&#39;, async (req, res) =&gt; {
       clientSecret: process.env.ZOOM_CLIENT_SECRET,
     });
 
-    // Demo: store tokens in session (use DB/secret store in prod)
+    // For demonstration only: store tokens in session (use secure storage in production)
     req.session.zoomTokens = tokens;
 
-    // Option A: redirect to a confirmation page with a button to open in Zoom
+    // Option A: Redirect to a confirmation page with a button to open in Zoom
     return res.redirect(&#39;/dashboard&#39;);
 
-    // Option B: redirect straight into Zoom via a JID deep link:
-    // return res.redirect(process.env.ROBOT_ZOOM_BOT_JID || &#39;https://zoom.us/launch/chat?jid=robot_example@xmpp.zoom.us&#39;);
+    // Option B: Redirect directly into Zoom using a JID deep link
+    // return res.redirect(`https://zoom.us/launch/chat?jid=${process.env.ROBOT_ZOOM_BOT_JID}`);
   } catch (e) {
     console.error(&#39;OAuth callback error:&#39;, e);
     return res.status(500).send(&#39;Token exchange failed.&#39;);
@@ -519,29 +532,36 @@ router.get(&#39;/callback&#39;, async (req, res) =&gt; {
 
 export default router;
 </code></pre>
-<h2 is-upgraded>Chatbot deeplinking</h2>
-<h3 is-upgraded>File Path</h3>
-<pre><code>views/dashboard.html
+<h2 is-upgraded>Add deep linking to the chatbot</h2>
+<p>After the user authorizes your app, use a deep link to open the chatbot directly in Zoom Team Chat. Add the following logic to a button on your confirmation page:</p>
+<p><strong>File path:</strong></p>
+<pre><code language="language-bash" class="language-bash">views/dashboard.html
 </code></pre>
-<h3 is-upgraded>Code Snippet</h3>
-<pre><code>&lt;script&gt;
-      const chatbotJid = &#34;robot_v1nhrah1hrqhuexexb5nn5-a@xmpp.zoom.us&#34;; // replace with your bot JID
+<pre><code language="language-html" class="language-html">&lt;script&gt;
+  const chatbotJid = &#34;robot_v1nhrah1hrqhuexexb5nn5-a@xmpp.zoom.us&#34;; // Replace with your bot JID
 
-      document.getElementById(&#34;zoom-button&#34;).addEventListener(&#34;click&#34;, () =&gt; {
-        const link = `https://zoom.us/launch/chat?jid=${encodeURIComponent(
-          chatbotJid
-        )}`;
-        // open link in a new tab/window
-        window.open(link, &#34;_blank&#34;, &#34;noopener,noreferrer&#34;);
-      });
-    &lt;/script&gt;
+  document.getElementById(&#34;zoom-button&#34;).addEventListener(&#34;click&#34;, () =&gt; {
+    const link = `https://zoom.us/launch/chat?jid=${encodeURIComponent(chatbotJid)}`;
+    window.open(link, &#34;_blank&#34;, &#34;noopener,noreferrer&#34;);
+  });
+&lt;/script&gt;
 </code></pre>
+<p>Use this pattern to create a smooth transition from your browser-based app to the Zoom client, improving user experience post-authorization.</p>
 
 
       </google-codelab-step>
     
-      <google-codelab-step label="Sending Messages with Zoom Chatbot API" duration="0">
-        <h3 is-upgraded>File Path</h3>
+      <google-codelab-step label="Send a message to Zoom Team Chat" duration="0">
+        <p>In this section, you&#39;ll implement a utility function that sends messages from your chatbot to Zoom Team Chat using the Chatbot API. This function constructs a message body, retrieves a chatbot access token, and sends a <code>POST</code> request to Zoom&#39;s <code>/im/chat/messages</code> endpoint.</p>
+<p>By the end of this section, you&#39;ll have:</p>
+<ul>
+<li>A reusable function to send messages to Zoom Team Chat</li>
+<li>Support for replying to messages using message threading</li>
+<li>Console logging for debugging message payloads and errors</li>
+</ul>
+<h2 is-upgraded>Implement message sending logic</h2>
+<p>Create a utility function to send a chat message using the Chatbot API. The function accepts the recipient JID, message content, and an optional message ID for threaded replies.</p>
+<h3 is-upgraded>File Path</h3>
 <pre><code>utils/zoom-api.js
 </code></pre>
 <h3 is-upgraded>Code Snippet</h3>
@@ -558,7 +578,7 @@ export async function sendChatMessage(toJid, message, replyTo = null) {
     const accessToken = await getChatbotToken();
     
     const body = {
-      account_id: &#34;5YQGYK-FSc-0M0DgZTCzkQ&#34;,
+      account_id: &#34;YOUR_ACCOUNT_ID&#34;,
       &#34;content&#34;: {
           &#34;head&#34;: {
            &#34;text&#34;: &#34;Hello World&#34;
@@ -570,9 +590,9 @@ export async function sendChatMessage(toJid, message, replyTo = null) {
            }
           ]
          },
-      robot_jid: &#34;v1nhrah1hrqhuexexb5nn5-a@xmpp.zoom.us&#34;,
-      to_jid: &#39;vbdj8euxrduts0tan29tra@xmpp.zoom.us&#39;,
-      user_jid: &#34;vbdj8euxrduts0tan29tra@xmpp.zoom.us&#34;,
+      robot_jid: &#34;YOUR_ROBOT_JID&#34;,
+      to_jid: &#39;YOUR_JID&#39;,
+      user_jid: &#34;YOUR_USER_JID&#34;,
       
     };
 
@@ -604,16 +624,44 @@ export async function sendChatMessage(toJid, message, replyTo = null) {
 }
 
 </code></pre>
+<p>This utility function enables structured messaging and optional threading in Zoom Team Chat—essential features for building interactive, event-driven chatbot experiences.</p>
+<p>Here is your <strong>&#34;Handle Zoom Team Chatbot events&#34;</strong> section rewritten using your standardized guide format, fully aligned with Zoom&#39;s internal documentation style:</p>
 
 
       </google-codelab-step>
     
-      <google-codelab-step label="Handling Chatbot Events" duration="0">
-        <h3 is-upgraded>File Path</h3>
-<pre><code>routes/zoom-webhookHandler.js
+      <google-codelab-step label="Handle Zoom Team Chatbot events" duration="0">
+        <p>In this section, you&#39;ll implement a webhook handler to process real-time events sent from Zoom Team Chat to your chatbot. These events include bot installation, message notifications, and app deauthorization. You&#39;ll also handle Zoom&#39;s URL validation flow to verify your webhook endpoint.</p>
+<p>By the end of this section, you&#39;ll have:</p>
+<ul>
+<li>A secure webhook handler for Zoom Team Chat events</li>
+<li>Support for responding to bot messages and system events</li>
+<li>Built-in validation and health check for endpoint reliability</li>
+</ul>
+<h2 is-upgraded>Implement a webhook event handler</h2>
+<p>Set up a route to handle incoming Zoom Team Chatbot events, validate requests, and process supported event types.</p>
+<table>
+<tr><td colspan="1" rowspan="1"><p>Event type</p>
+</td><td colspan="1" rowspan="1"><p>Description</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p><code>bot_notification</code></p>
+</td><td colspan="1" rowspan="1"><p>Triggered when a user sends a message to the chatbot</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p><code>bot_installed</code></p>
+</td><td colspan="1" rowspan="1"><p>Sent when the chatbot is installed in a Zoom Team Chat workspace</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p><code>app_deauthorized</code></p>
+</td><td colspan="1" rowspan="1"><p>Sent when the app is uninstalled</p>
+</td></tr>
+<tr><td colspan="1" rowspan="1"><p><code>endpoint.url_validation</code></p>
+</td><td colspan="1" rowspan="1"><p>Used by Zoom to validate and verify the webhook endpoint</p>
+</td></tr>
+</table>
+<h3 is-upgraded>File Path</h3>
+<pre><code language="language-bash" class="language-bash">routes/zoom-webhookHandler.js
 </code></pre>
 <h3 is-upgraded>Code Snippet</h3>
-<pre><code>import express from &#39;express&#39;;
+<pre><code language="language-js" class="language-js">import express from &#39;express&#39;;
 import { callAnthropicAPI } from &#39;../utils/anthropic.js&#39;;
 import { validateWebhookPayload, createValidationMiddleware } from &#39;../utils/validation.js&#39;;
 
@@ -693,92 +741,123 @@ router.get(&#39;/health&#39;, (_req, res) =&gt; {
 
 export default router;
 </code></pre>
+<p>This webhook handler enables real-time communication between your Zoom chatbot and users, allowing your app to respond to messages, handle installations, and maintain a reliable connection with Zoom Team Chat.</p>
+<p>Here is your <strong>&#34;Slash commands and UI elements&#34;</strong> section rewritten using your established structure and Zoom documentation style. This version improves clarity, grammar, and structure while integrating the provided screenshots and code updates cleanly:</p>
 
 
       </google-codelab-step>
     
-      <google-codelab-step label="Slash commands and UI elements" duration="0">
-        <h2 is-upgraded>Add Slash Command</h2>
+      <google-codelab-step label="Add slash commands and UI elements" duration="0">
+        <p>In this section, you&#39;ll configure a slash command in the Zoom App Marketplace and use the App Card Builder Kit to design interactive UI elements. These enhancements allow users to trigger your chatbot using a command and receive structured messages with buttons for feedback or interaction.</p>
+<p>By the end of this section, you&#39;ll have:</p>
+<ul>
+<li>A slash command configured to invoke your chatbot in Zoom Team Chat</li>
+<li>An interactive message layout created using the App Card Builder Kit</li>
+<li>An updated <code>sendChatMessage</code> function that sends a UI-rich response</li>
+</ul>
+<h2 is-upgraded>Configure a slash command</h2>
+<p>Set up a slash command to allow users to trigger the chatbot from Zoom Team Chat.</p>
 <ol type="1">
-<li>Nagivate to Zoom Marketplace place</li>
-<li>Select the App</li>
-<li>On the Surface page, naviagate to the Team Chat subscrition section</li>
-<li>Toggle Slash command then enter &#34;zwc&#34; or a command of your choice</li>
+<li>Navigate to the <strong>Zoom App Marketplace</strong></li>
+<li>Select your app</li>
+<li>In the sidebar, go to <strong>Surface</strong> &gt; <strong>Team Chat Subscription</strong></li>
+<li>Toggle <strong>Slash Command</strong> and enter <code>zwc</code> (or a command of your choice)</li>
 </ol>
-<p class="image-container"><img alt="alt-text-here" src="img/a01610bc395b0921.png"></p>
-<h2 is-upgraded>UI elements</h2>
-<h2 is-upgraded>Card Builder</h2>
-<p>Use the Card Builder to quickly create UI elments.</p>
+<p><strong>Example:</strong></p>
+<p class="image-container"><img alt="Zoom App Marketplace Slash Command Setup" src="img/a01610bc395b0921.png"></p>
+<h2 is-upgraded>Create UI elements with Card Builder</h2>
+<p>Use the <a href="https://developers.zoom.us/docs/workplace/chat/cards/card-builder/" target="_blank">Zoom App Card Builder Kit</a> to design structured messages and interactive components like buttons.</p>
 <ol type="1">
-<li>Navgviate to App Card Builder Kit</li>
-<li>Select the Feedback Button in the action section</li>
+<li>Open the <strong>App Card Builder Kit</strong></li>
+<li>In the <strong>Actions</strong> panel, select <strong>Feedback Buttons</strong></li>
+<li>Customize the card layout and preview the message</li>
+<li>Copy the generated JSON and update your chatbot message payload</li>
 </ol>
-<p class="image-container"><img alt="alt-text-here" src="img/a86a60f206ab59b0.png"></p>
-<h2 is-upgraded>File Path</h2>
-<pre><code>utils/zoom-api.js
+<p><strong>Example:</strong></p>
+<p class="image-container"><img alt="App Card Builder UI Elements" src="img/a86a60f206ab59b0.png"></p>
+<h2 is-upgraded>Update chatbot message payload</h2>
+<p>To include UI elements like feedback buttons in your chatbot response, update the <code>body</code> object in your <code>sendChatMessage</code> function.</p>
+<p><strong>File path:</strong></p>
+<pre><code language="language-bash" class="language-bash">utils/zoom-api.js
 </code></pre>
-<h3 is-upgraded>Code Snippet</h3>
-<p>Update the body variable in the sendMessage function.</p>
-<pre><code>...
- const body = {
-      account_id: &#34;YOUR_ACCOUNT_ID&#34;,,
-      &#34;content&#34;: {
-        &#34;head&#34;: {
-          &#34;text&#34;: &#34;Hello World&#34;,
-          &#34;style&#34;: { &#34;bold&#34;: true }
-        },
-        &#34;body&#34;: [
+<pre><code language="language-js" class="language-js">const body = {
+  account_id: &#34;YOUR_ACCOUNT_ID&#34;,
+  robot_jid: &#34;YOUR_ROBOT_JID&#34;,
+  to_jid: &#34;YOUR_JID&#34;,
+  user_jid: &#34;YOUR_USER_ID&#34;,
+  content: {
+    head: {
+      text: &#34;Hello World&#34;,
+      style: { bold: true }
+    },
+    body: [
+      {
+        type: &#34;message&#34;,
+        text: message
+      },
+      {
+        type: &#34;actions&#34;,
+        items: [
           {
-            &#34;type&#34;: &#34;message&#34;,
-            &#34;text&#34;: message
+            text: &#34;Thumbsup&#34;,
+            value: &#34;thumbsup&#34;,
+            style: &#34;Thumbsup&#34;
           },
           {
-            &#34;type&#34;: &#34;actions&#34;,
-            &#34;items&#34;: [
-              {
-                &#34;text&#34;: &#34;Thumbsup&#34;,
-                &#34;value&#34;: &#34;thumbsup&#34;,
-                &#34;style&#34;: &#34;Thumbsup&#34;
-              },
-              {
-                &#34;text&#34;: &#34;Thumbsdown&#34;,
-                &#34;value&#34;: &#34;thumbsdown&#34;,
-                &#34;style&#34;: &#34;Thumbsdown&#34;
-              }
-            ]
+            text: &#34;Thumbsdown&#34;,
+            value: &#34;thumbsdown&#34;,
+            style: &#34;Thumbsdown&#34;
           }
         ]
-      },
-      robot_jid: &#34;YOUR_ROBOT_JID&#34;,,
-      to_jid: &#34;YOUR_JID&#34;,,
-      user_jid: &#34;YOUR_USER_ID&#34;,
-
-    };
+      }
+    ]
+  }
+};
 </code></pre>
+<p>This pattern combines slash commands and interactive cards to create a more engaging Zoom Team Chat experience—making your chatbot feel intuitive, responsive, and visually aligned with modern collaboration workflows.</p>
 
 
       </google-codelab-step>
     
-      <google-codelab-step label="Reaction Handling" duration="0">
-        <pre><code>routes/zoom-webhookHandler.js
+      <google-codelab-step label="Handle reactions from interactive messages" duration="0">
+        <p>In this section, you&#39;ll add logic to handle button clicks from interactive messages sent by your Zoom Team Chatbot. When a user clicks a button—such as a thumbs-up or thumbs-down—your bot will capture the value and respond accordingly in chat.</p>
+<p>By the end of this section, you&#39;ll have:</p>
+<ul>
+<li>Support for handling interactive message button clicks</li>
+<li>Dynamic chatbot responses based on user input</li>
+<li>A visual confirmation of the button value in Zoom Team Chat</li>
+</ul>
+<h2 is-upgraded>Add a handler for interactive message actions</h2>
+<p>Extend your webhook event handler to respond to the <code>interactive_message_actions</code> event. This allows your bot to capture the value of a clicked button and send a follow-up message to the chat.</p>
+<p><strong>File path: </strong><code>routes/zoom-webhookHandler.js</code></p>
+<pre><code language="language-js" class="language-js">case &#39;interactive_message_actions&#39;:
+  console.log(&#39;Processing interactive message action from Zoom Team Chat&#39;);
+  sendChatMessage(toJid, `You clicked a button with value: ${payload?.actionItem?.value || &#39;unknown&#39;}`);
+  break;
 </code></pre>
-<h3 is-upgraded>Code Snippet</h3>
-<pre><code> case &#39;interactive_message_actions&#39;  :
-        console.log(&#39;Processing interactive message action from Zoom Team Chat&#39;);
-        sendChatMessage(toJid, `You clicked a button with value: ${payload?.actionItem?.value || &#39;unknown&#39;}`);
-        break;
-</code></pre>
-<h2 is-upgraded>Test</h2>
+<h2 is-upgraded>Test your chatbot&#39;s reaction handling</h2>
 <ol type="1">
-<li>Click the thumsup button and you will now see the response.</li>
+<li>Launch your chatbot in Zoom Team Chat</li>
+<li>Click the thumbs-up or thumbs-down button</li>
+<li>The chatbot should reply with the value of the button you clicked</li>
 </ol>
-<p class="image-container"><img alt="alt-text-here" src="img/bb7d20b229ea6492.png"></p>
+<p><strong>Example:</strong></p>
+<p class="image-container"><img alt="Reaction handling in Zoom Team Chat" src="img/bb7d20b229ea6492.png"></p>
+<p>This interaction pattern gives users immediate feedback and enables lightweight input collection inside Zoom Team Chat—ideal for surveys, approvals, or quick actions.</p>
 
 
       </google-codelab-step>
     
-      <google-codelab-step label="Replying to Messages with Anthropic API (Using Threads)" duration="0">
-        <h2 is-upgraded>Add Anthropic function</h2>
+      <google-codelab-step label="Reply to messages with Anthropic API (using threads)" duration="0">
+        <p>In this section, you&#39;ll integrate the Anthropic API with your Zoom Team Chatbot to handle user messages in threads. When a user sends a message to the bot, your app will generate a reply using an AI model (such as Claude 3.5) and respond in the same thread.</p>
+<p>By the end of this section, you&#39;ll have:</p>
+<ul>
+<li>A working integration with the Anthropic API</li>
+<li>Threaded AI responses in Zoom Team Chat</li>
+<li>Session-based message history for improved conversational context</li>
+</ul>
+<h2 is-upgraded>Add Anthropic integration</h2>
+<p>Create a utility function that sends a user&#39;s message to Anthropic, receives a completion, and replies to the chat thread. It maintains per-user history to support contextual conversations.</p>
 <pre><code>utils/anthropic.js
 </code></pre>
 <h3 is-upgraded>Code Snippet</h3>
@@ -1057,7 +1136,8 @@ export function getConversationHistory(userJid) {
 }
 
 </code></pre>
-<h2 is-upgraded>Update Webhook bot notification</h2>
+<h2 is-upgraded>Update webhook to trigger Anthropic replies</h2>
+<p>Modify the bot_notification case in your webhook handler to call the Anthropic API when a user sends a message to the chatbot.</p>
 <pre><code>routes/zoom-webhookHandler.js
 </code></pre>
 <h3 is-upgraded>Code Snippet</h3>
@@ -1070,24 +1150,65 @@ export function getConversationHistory(userJid) {
         await callAnthropicAPI(payload, true);
         break;
 </code></pre>
+<p>This implementation allows your Zoom Team Chatbot to respond in threads using AI-generated answers, creating a conversational experience powered by Anthropic&#39;s large language models.</p>
+<p>Here&#39;s the full <strong>&#34;App shortcuts and webview setup&#34;</strong> section rewritten using your established structure and Zoom documentation style. I&#39;ve carefully reviewed the images and deduced the appropriate steps, added concise explanations, and formatted everything for clarity and professionalism.</p>
 
 
       </google-codelab-step>
     
-      <google-codelab-step label="App Shortcuts" duration="0">
-        <p class="image-container"><img alt="alt-text-here" src="img/d958e4a7ec478f7.png"></p>
-<p class="image-container"><img alt="alt-text-here" src="img/dd082bae6b8bc384.png"></p>
-<p class="image-container"><img alt="alt-text-here" src="img/b50c668021cc1703.png"></p>
-<h2 is-upgraded>Add headers to server.js</h2>
+      <google-codelab-step label="Add app shortcuts and webview" duration="0">
+        <p>In this section, you&#39;ll configure an app shortcut in the Zoom App Marketplace and enable a secure webview experience inside Zoom Team Chat. Shortcuts allow users to trigger actions like launching modals or composing messages, while the webview surface enables in-app UI hosted from your server.</p>
+<p>By the end of this section, you&#39;ll have:</p>
+<ul>
+<li>A Zoom Team Chat shortcut with a custom command and modal launch</li>
+<li>Secure headers added to enable embedded webviews</li>
+<li>A working webview rendered inside the Zoom client</li>
+</ul>
+<h2 is-upgraded>Configure an app shortcut</h2>
+<p>Create a new app shortcut that lets users trigger a modal or message action directly from Zoom Team Chat.</p>
+<ol type="1">
+<li>Go to the <strong>Zoom App Marketplace</strong></li>
+<li>Select your app</li>
+<li>Navigate to <strong>Surface &gt; App Shortcuts</strong></li>
+<li>Toggle <strong>New Action</strong> to enabled</li>
+<li>Fill in the fields:<ul>
+<li><strong>Action Name</strong>: <code>Create note</code></li>
+<li><strong>Action Command ID</strong>: <code>create_note</code></li>
+</ul>
+</li>
+<li>Choose both action types:<ul>
+<li>Compose Box</li>
+<li>Message Action</li>
+</ul>
+</li>
+<li>(Optional) Set:<ul>
+<li><strong>Action Dialog Title</strong>: <code>Create a note</code></li>
+<li><strong>Action Dialog Size</strong>: Medium</li>
+<li>Upload an icon if desired</li>
+</ul>
+</li>
+</ol>
+<p><strong>Example UI:</strong></p>
+<p class="image-container"><img alt="Configure App Shortcut – Action Setup" src="img/d958e4a7ec478f7.png"><img alt="Configure App Shortcut – Dialog Setup" src="img/dd082bae6b8bc384.png"></p>
+<h2 is-upgraded>Enable secure webview</h2>
+<p>To render a custom web experience inside the Zoom client, configure the <strong>Surface &gt; Home URL</strong> and allowed domains.</p>
+<ol type="1">
+<li>In the <strong>Surface</strong> tab, scroll to <strong>Home URL</strong></li>
+<li>Enter the webview URL served by your backend (e.g. <code>https://example.ngrok.app/webview</code>)</li>
+<li>Under <strong>Domain Allow List</strong>, add the root domain (<code>ngrok.app</code>)</li>
+<li>Provide a one-line justification (e.g. &#34;Development testing using ngrok&#34;)</li>
+</ol>
+<p><strong>Example UI:</strong></p>
+<p class="image-container"><img alt="Configure Home URL and Domain List" src="img/b50c668021cc1703.png"></p>
+<h2 is-upgraded>Add security headers to support webview</h2>
+<p>Install <a href="https://www.npmjs.com/package/helmet" target="_blank">Helmet</a> to enforce content security policies that allow Zoom to embed your app via iframe in the Zoom client.</p>
 <h3 is-upgraded>Install Helmet</h3>
-<pre><code>npm install &#39;helmet&#39;
+<pre><code language="language-bash" class="language-bash">npm install helmet
+</code></pre>
+<h3 is-upgraded>File path: <code>server.js</code></h3>
+<pre><code language="language-js" class="language-js">import helmet from &#39;helmet&#39;;
 
-</code></pre>
-<h3 is-upgraded>File Path</h3>
-<pre><code>server.js
-</code></pre>
-<h3 is-upgraded>Code Snippet</h3>
-<pre><code>app.use(helmet({
+app.use(helmet({
   contentSecurityPolicy: {
     useDefaults: true,
     directives: {
@@ -1097,7 +1218,6 @@ export function getConversationHistory(userJid) {
         &#34;&#39;unsafe-inline&#39;&#34;,
         &#34;https://appssdk.zoom.us&#34;,
         &#34;https://source.zoom.us&#34;,
-        &#34;https://cdn.jsdelivr.net&#34;,     // ⬅️ allow jsDelivr (Chart.js CDN)
         &#34;https://cdn.ngrok.com&#34;
       ],
       styleSrc: [&#34;&#39;self&#39;&#34;, &#34;&#39;unsafe-inline&#39;&#34;, &#34;https://cdn.ngrok.com&#34;],
@@ -1108,31 +1228,52 @@ export function getConversationHistory(userJid) {
         &#34;https://zoom.us&#34;, &#34;https://*.zoom.us&#34;,
         &#34;https://*.ngrok.app&#34;, &#34;https://*.ngrok.io&#34;
       ],
-      frameAncestors: [&#34;&#39;self&#39;&#34;, &#34;https://*.zoom.us&#34;],   // add this
+      frameAncestors: [&#34;&#39;self&#39;&#34;, &#34;https://*.zoom.us&#34;], // Required for Zoom iframe
     },
   },
 }));
 </code></pre>
-<h2 is-upgraded>Add webview</h2>
-<h3 is-upgraded>File Path</h3>
-<pre><code>views/webview.html
-</code></pre>
-<h3 is-upgraded>Code Snippet</h3>
-<pre><code>&lt;p&gt;Some text&lt;/p&gt;
-
+<h2 is-upgraded>Add a sample webview page</h2>
+<p>Create a basic HTML file to test rendering your app within the Zoom client.</p>
+<h3 is-upgraded>File path: <code>views/webview.html</code></h3>
+<pre><code language="language-html" class="language-html">&lt;p&gt;Some text&lt;/p&gt;
 &lt;button&gt;Some actions&lt;/button&gt;
 </code></pre>
+<p>This configuration allows your app to securely launch modal dialogs and render embedded content directly inside the Zoom client—key capabilities for building rich, native-feeling chat extensions.</p>
+<p>Here is your <strong>&#34;Apps SDK&#34;</strong> section, rewritten to follow your standardized guide format and Zoom documentation best practices. It explains how to use the Zoom Apps SDK to create a modal webview for your chatbot inside Zoom Team Chat.</p>
 
 
       </google-codelab-step>
     
-      <google-codelab-step label="Apps SDK" duration="0">
-        <p class="image-container"><img alt="alt-text-here" src="img/a23a1d1392ee9c1.png"></p>
-<h3 is-upgraded>File Path</h3>
-<pre><code>views/webview.html
+      <google-codelab-step label="Use Zoom Apps SDK to power modals in Team Chat" duration="0">
+        <p>In this section, you&#39;ll configure the Zoom App to surface a custom webview inside Zoom Team Chat using the Zoom Apps SDK. This modal can be launched using app shortcuts and enables direct interaction with users inside the Zoom client—such as composing messages or viewing context.</p>
+<p>By the end of this section, you&#39;ll have:</p>
+<ul>
+<li>A custom webview that runs inside the Zoom Team Chat modal</li>
+<li>SDK integration to send messages or display chat context</li>
+<li>Secure headers and domain permissions for iframe support</li>
+</ul>
+<h2 is-upgraded>Configure domain allow list</h2>
+<p>To enable Zoom to render your app in an iframe, you must allowlist the domains used for your webview.</p>
+<ol type="1">
+<li>Go to the <strong>Surface</strong> tab in your Zoom App configuration</li>
+<li>Set the <strong>Home URL</strong> to the path hosting your webview (e.g. <code>https://example.ngrok.app/webview</code>)</li>
+<li>Under <strong>Domain Allow List</strong>, add:<ul>
+<li><code>ngrok.app</code> — required for local development</li>
+<li><code>appssdk.zoom.us</code> — required to load the Zoom Apps SDK</li>
+</ul>
+</li>
+</ol>
+<p>Provide a reason for each custom domain if prompted.</p>
+<p><strong>Example UI:</strong></p>
+<p class="image-container"><img alt="Domain Allow List Configuration" src="img/a23a1d1392ee9c1.png"></p>
+<h2 is-upgraded>Implement Zoom Apps SDK in webview</h2>
+<p>Build an HTML view that initializes the Zoom SDK, allows users to compose a message, and optionally view context data from the current chat. This is the modal UI users will interact with inside Zoom.</p>
+<p><strong>File path:</strong></p>
+<pre><code language="language-bash" class="language-bash">views/webview.html
 </code></pre>
 <h3 is-upgraded>Code Snippet</h3>
-<pre><code>&lt;!DOCTYPE html&gt;
+<pre><code language="language-html" class="language-html">&lt;!DOCTYPE html&gt;
 &lt;html&gt;
   &lt;head&gt;
     &lt;meta charset=&#34;utf-8&#34; /&gt;
@@ -1537,11 +1678,13 @@ export function getConversationHistory(userJid) {
 &lt;/html&gt;
 
 </code></pre>
+<p>This setup uses Zoom&#39;s secure iframe environment and SDK methods such as <code>sendMessageToChat</code>, <code>getRunningContext</code>, and <code>getChatContext</code> to create a native-feeling experience inside Zoom Team Chat.</p>
+<p>The Zoom Apps SDK allows your app to surface interactive modals with full context awareness and message-sending capabilities—enabling rich, embedded workflows inside Zoom.</p>
 
 
       </google-codelab-step>
     
-      <google-codelab-step label="Add App To Team Chat Channel" duration="0">
+      <google-codelab-step label="Webhook handler" duration="0">
         <h3 is-upgraded>File Path</h3>
 <pre><code>routes/zoom-webhookHandler.js
 </code></pre>
@@ -1552,55 +1695,97 @@ export function getConversationHistory(userJid) {
 <ul>
 <li><a href="https://developers.zoom.us/docs/team-chat/app-shortcuts-and-apps-sdk/" target="_blank">App shortcuts and Apps SDK</a></li>
 </ul>
-<h2 is-upgraded>Account Setting: Enable Add App to Channel</h2>
-<ol type="1">
-<li>Navigate to the portal</li>
-<li>On Account Managment/ Account Setting/ Team Chat, toggle flag<img alt="Image 0" src="img/4343bfa2bb2f237b.png"></li>
-</ol>
-<h2 is-upgraded>Add to Channel Marketplace Configurations</h2>
-<h3 is-upgraded>Add Scopes:</h3>
-<ol type="1">
-<li>Navigate to the Scope tab</li>
-<li>Add Chatbot Scope:<ul>
-<li>Enable Chatbot within Zoom Team Chat Channel</li>
-</ul>
-</li>
-</ol>
-<h3 is-upgraded>Event Subscription</h3>
-<ol type="1">
-<li>Navigate to the Access tab</li>
-<li>Select the following scopes:<ul>
-<li>Team Chat Channel Chatbot Add</li>
-<li>Team Chat Channel Chatbot Removed</li>
-</ul>
-</li>
-<li>Not Added but will events automatically sent:<ul>
-<li>team_chat.app_invited</li>
-<li>team_chat.app_removed</li>
-<li>team_chat.app_mention</li>
-<li>team_chat.app_conversation_opened</li>
-</ul>
-</li>
-<li>Added Webhook Endpoint URL:</li>
-</ol>
-<pre><code>https://example.ngrok.app/anthropic
-</code></pre>
-<h2 is-upgraded>Add to Channel Steps</h2>
-<p class="image-container"><img alt="Image 1" src="img/111f5553763ca043.png"></p>
-<p class="image-container"><img alt="Image 2" src="img/c75ab6e30475ee88.png"></p>
-<p class="image-container"><img alt="Image 3" src="img/c57ccef1e79ad0be.png"></p>
-<p class="image-container"><img alt="Image 4" src="img/4eb4446d9a0785d3.png"></p>
-<p class="image-container"><img alt="Image 5" src="img/92b4c20f3f1b8908.png"></p>
-<h2 is-upgraded>Resources</h2>
-<ol type="1">
-<li><a href="https://support.zoom.com/hc/en/article?id=zm_kb&sysparm_article=KB0082265" target="_blank">Using Apps in chats</a></li>
-</ol>
+<p>Here is your <strong>&#34;Add app to Team Chat channel&#34;</strong> section rewritten using your established documentation format and Zoom style guidelines. This version organizes the information into clear steps, pairs it with images, and emphasizes the setup flow needed to allow users to activate the chatbot inside a Zoom Team Chat channel.</p>
 
 
       </google-codelab-step>
     
-      <google-codelab-step label="What&#39;s next ?" duration="0">
-        
+      <google-codelab-step label="Add app to Team Chat channel" duration="0">
+        <p>In this section, you&#39;ll configure your Zoom chatbot to be added to Team Chat channels, enabling users to activate it on demand. This setup allows your app to listen for channel events, respond to mentions, and participate in threaded conversations across channels.</p>
+<p>By the end of this section, you&#39;ll have:</p>
+<ul>
+<li>Team Chat configuration that supports app invitations to channels</li>
+<li>Webhook subscriptions for app-added and removed events</li>
+<li>A working channel integration users can trigger directly</li>
+</ul>
+<h2 is-upgraded>Enable &#34;Add app to channel&#34; in account settings</h2>
+<p>To allow users to add your app to chat channels, you must first enable this option in your Zoom account settings.</p>
+<ol type="1">
+<li>Navigate to the Zoom admin portal</li>
+<li>Go to <strong>Account Management &gt; Account Settings &gt; Team Chat</strong></li>
+<li>Toggle <strong>&#34;Allow users to add apps to channels&#34;</strong> to enabled</li>
+</ol>
+<p><strong>Example:</strong></p>
+<p class="image-container"><img alt="Enable Add App to Channel Toggle" src="img/4343bfa2bb2f237b.png"></p>
+<h2 is-upgraded>Configure app scopes and webhooks</h2>
+<p>Ensure your app is configured to support being invited to and removed from channels, and is authorized to listen for related events.</p>
+<h3 is-upgraded>Add scopes</h3>
+<ol type="1">
+<li>In the <strong>Scopes</strong> tab of your app:<ul>
+<li>Add: <strong>Enable Chatbot within Zoom Team Chat Channel</strong></li>
+</ul>
+</li>
+</ol>
+<h3 is-upgraded>Configure event subscriptions</h3>
+<ol type="1">
+<li>In the <strong>Access</strong> tab:<ul>
+<li>Add the following scopes:<ul>
+<li><code>team_chat_channel_chatbot_add</code></li>
+<li><code>team_chat_channel_chatbot_removed</code></li>
+</ul>
+</li>
+<li>These events are sent automatically and do not need manual registration:<ul>
+<li><code>team_chat.app_invited</code></li>
+<li><code>team_chat.app_removed</code></li>
+<li><code>team_chat.app_mention</code></li>
+<li><code>team_chat.app_conversation_opened</code></li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Add your webhook endpoint:</li>
+</ol>
+<pre><code language="language-bash" class="language-bash">https://example.ngrok.app/anthropic
+</code></pre>
+<h2 is-upgraded>Add the chatbot to a Team Chat channel</h2>
+<p>After configuration, add your chatbot to a Zoom Team Chat channel to begin interacting with users.</p>
+<ol type="1">
+<li>Navigate to a <strong>Team Chat channel</strong></li>
+<li>Click the <strong>members icon</strong> at the top of the channel</li>
+</ol>
+<p><strong>Example:</strong></p>
+<p class="image-container"><img alt="Open Add Members Modal" src="img/111f5553763ca043.png"></p>
+<ol type="1" start="3">
+<li>Under the <strong>Integrations</strong> tab, click <strong>Add apps</strong></li>
+</ol>
+<p class="image-container"><img alt="Add Apps to Channel" src="img/c75ab6e30475ee88.png"></p>
+<ol type="1" start="4">
+<li>Search for and select your chatbot app from the list</li>
+</ol>
+<p class="image-container"><img alt="Search for Chatbot" src="img/c57ccef1e79ad0be.png"></p>
+<ol type="1" start="5">
+<li>Choose which users/groups can access the app<ul>
+<li>Recommended: Select <strong>Users &amp; groups</strong> or <strong>All users</strong></li>
+</ul>
+</li>
+</ol>
+<p class="image-container"><img alt="App Permissions Prompt" src="img/4eb4446d9a0785d3.png"></p>
+<ol type="1" start="6">
+<li>Confirm the app&#39;s permissions and click <strong>Add</strong></li>
+</ol>
+<p class="image-container"><img alt="Add to Channel Confirmation" src="img/92b4c20f3f1b8908.png"></p>
+<p>This setup enables your Zoom chatbot to operate at the channel level—automatically listening for interactions and responding to events in a collaborative, multi-user environment.</p>
+<h2 is-upgraded>Resources</h2>
+<ul>
+<li><a href="https://support.zoom.com/hc/en/article?id=zm_kb&sysparm_article=KB0082265" target="_blank">Zoom Support: Using Apps in Chats</a></li>
+</ul>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="What&#39;s next" duration="0">
+        <p>Explore Zoom Team Chat further by experimenting with richer message layouts, interactive cards, modals, and event-driven workflows. Combine these building blocks with Zoom Apps and Chatbot APIs to design engaging, in-context experiences that meet users where work happens.</p>
+
 
       </google-codelab-step>
     
