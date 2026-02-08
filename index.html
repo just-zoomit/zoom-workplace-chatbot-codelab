@@ -1198,7 +1198,7 @@ export function getConversationHistory(userJid) {
 <p><strong>Example UI:</strong></p>
 <p class="image-container"><img alt="Configure Home URL and Domain List" src="img/b50c668021cc1703.png"></p>
 <h2 is-upgraded>Add security headers to support webview</h2>
-<p>Install <a href="https://www.npmjs.com/package/helmet" target="_blank">Helmet</a> to enforce content security policies that allow Zoom to embed your app via iframe in the Zoom client.</p>
+<p>Install <a href="https://www.npmjs.com/package/helmet" target="_blank">Helmet</a> to enforce content security policies that allow Zoom to embed your app in the Zoom client.</p>
 <h3 is-upgraded>Install Helmet</h3>
 <pre><code language="language-bash" class="language-bash">npm install helmet
 </code></pre>
@@ -1225,7 +1225,7 @@ app.use(helmet({
         &#34;https://zoom.us&#34;, &#34;https://*.zoom.us&#34;,
         &#34;https://*.ngrok.app&#34;, &#34;https://*.ngrok.io&#34;
       ],
-      frameAncestors: [&#34;&#39;self&#39;&#34;, &#34;https://*.zoom.us&#34;], // Required for Zoom iframe
+      frameAncestors: [&#34;&#39;self&#39;&#34;, &#34;https://*.zoom.us&#34;], // Required for Zoom
     },
   },
 }));
@@ -1247,10 +1247,10 @@ app.use(helmet({
 <ul>
 <li>A custom webview that runs inside the Zoom Team Chat modal</li>
 <li>SDK integration to send messages or display chat context</li>
-<li>Secure headers and domain permissions for iframe support</li>
+<li>Secure headers and domain permissions to integrate a third-party app into the Zoom client</li>
 </ul>
 <h2 is-upgraded>Configure domain allow list</h2>
-<p>To enable Zoom to render your app in an iframe, you must allowlist the domains used for your webview.</p>
+<p>To enable Zoom to render your app in the Zoom client, you must allowlist the domains used for your webview.</p>
 <ol type="1">
 <li>Go to the <strong>Surface</strong> tab in your Zoom App configuration</li>
 <li>Set the <strong>Home URL</strong> to the path hosting your webview (e.g. <code>https://example.ngrok.app/webview</code>)</li>
@@ -1674,7 +1674,7 @@ app.use(helmet({
 &lt;/html&gt;
 
 </code></pre>
-<p>This setup uses Zoom&#39;s secure iframe environment and SDK methods such as <code>sendMessageToChat</code>, <code>getRunningContext</code>, and <code>getChatContext</code> to create a native-feeling experience inside Zoom Team Chat.</p>
+<p>This setup uses Zoom&#39;s App SDK methods such as <code>sendMessageToChat</code>, <code>getRunningContext</code>, and <code>getChatContext</code> to create a native-feeling experience inside Zoom Team Chat.</p>
 <p>The Zoom Apps SDK allows your app to surface interactive modals with full context awareness and message-sending capabilities—enabling rich, embedded workflows inside Zoom.</p>
 
 
