@@ -1313,6 +1313,10 @@ app.use(helmet({
 &lt;button&gt;Some actions&lt;/button&gt;
 </code></pre>
 <p>This configuration allows your app to securely launch modal dialogs and render embedded content directly inside the Zoom client—key capabilities for building rich, native-feeling chat extensions.</p>
+<h2 is-upgraded>Resources</h2>
+<ul>
+<li><a href="https://developers.zoom.us/docs/team-chat/app-shortcuts-and-apps-sdk/" target="_blank">App shortcuts and Apps SDK</a></li>
+</ul>
 
 
       </google-codelab-step>
@@ -1756,22 +1760,7 @@ app.use(helmet({
 
       </google-codelab-step>
     
-      <google-codelab-step label="Webhook handler" duration="0">
-        <h3 is-upgraded>File Path</h3>
-<pre><code>routes/zoom-webhookHandler.js
-</code></pre>
-<h3 is-upgraded>Code Snippet</h3>
-<pre><code>Need Code Snippet
-</code></pre>
-<h2 is-upgraded>Resources</h2>
-<ul>
-<li><a href="https://developers.zoom.us/docs/team-chat/app-shortcuts-and-apps-sdk/" target="_blank">App shortcuts and Apps SDK</a></li>
-</ul>
-
-
-      </google-codelab-step>
-    
-      <google-codelab-step label="Add app to Team Chat channel" duration="0">
+      <google-codelab-step label="Add App to Team Chat Channel" duration="0">
         <p>In this section, you&#39;ll configure your Zoom chatbot to be added to Team Chat channels, enabling users to activate it on demand. This setup allows your app to listen for channel events, respond to mentions, and participate in threaded conversations across channels.</p>
 <p>By the end of this section, you&#39;ll have:</p>
 <ul>
@@ -1779,73 +1768,231 @@ app.use(helmet({
 <li>Webhook subscriptions for app-added and removed events</li>
 <li>A working channel integration users can trigger directly</li>
 </ul>
-<h2 is-upgraded>Enable &#34;Add app to channel&#34; in account settings</h2>
-<p>To allow users to add your app to chat channels, you must first enable this option in your Zoom account settings.</p>
+<h2 is-upgraded>Enable &#34;Add App to Channel&#34; in Account Settings</h2>
+<p>To allow users to add your app to chat channels, you must first enable this option in your Zoom account settings:</p>
 <ol type="1">
-<li>Navigate to the Zoom admin portal</li>
-<li>Go to <strong>Account Management &gt; Account Settings &gt; Team Chat</strong></li>
-<li>Toggle <strong>&#34;Allow users to add apps to channels&#34;</strong> to enabled</li>
+<li>Navigate to the <strong>Zoom admin portal</strong></li>
+<li>Go to <strong>Account Management → Account Settings → Team Chat</strong></li>
+<li>Toggle <strong>&#34;Allow users to add apps to channels&#34;</strong> to <strong>enabled</strong></li>
 </ol>
 <p><strong>Example:</strong></p>
 <p class="image-container"><img alt="Enable Add App to Channel Toggle" src="img/4343bfa2bb2f237b.png"></p>
-<h2 is-upgraded>Configure app scopes and webhooks</h2>
-<p>Ensure your app is configured to support being invited to and removed from channels, and is authorized to listen for related events.</p>
-<h3 is-upgraded>Add scopes</h3>
-<ol type="1">
-<li>In the <strong>Scopes</strong> tab of your app:<ul>
-<li>Add: <strong>Enable Chatbot within Zoom Team Chat Channel</strong></li>
+<h2 is-upgraded>Configure App Scopes and Webhooks</h2>
+<p>Ensure your app is authorized to participate in channels and listen for membership and conversation events.</p>
+<h3 is-upgraded>Add Scopes</h3>
+<p>In the <strong>Scopes</strong> tab of your app:</p>
+<ul>
+<li><code>Enable Chatbot within Zoom Team Chat Channel</code></li>
 </ul>
-</li>
-</ol>
-<h3 is-upgraded>Configure event subscriptions</h3>
-<ol type="1">
-<li>In the <strong>Access</strong> tab:<ul>
-<li>Add the following scopes:<ul>
+<h3 is-upgraded>Configure Event Subscriptions</h3>
+<p>In the <strong>Access</strong> tab:</p>
+<ul>
+<li>Add these event scopes:<ul>
 <li><code>team_chat_channel_chatbot_add</code></li>
 <li><code>team_chat_channel_chatbot_removed</code></li>
 </ul>
 </li>
-<li>These events are sent automatically and do not need manual registration:<ul>
+<li>These additional events are automatically triggered:<ul>
 <li><code>team_chat.app_invited</code></li>
 <li><code>team_chat.app_removed</code></li>
 <li><code>team_chat.app_mention</code></li>
 <li><code>team_chat.app_conversation_opened</code></li>
 </ul>
 </li>
-</ul>
-</li>
 <li>Add your webhook endpoint:</li>
-</ol>
+</ul>
 <pre><code language="language-bash" class="language-bash">https://example.ngrok.app/anthropic
 </code></pre>
-<h2 is-upgraded>Add the chatbot to a Team Chat channel</h2>
-<p>After configuration, add your chatbot to a Zoom Team Chat channel to begin interacting with users.</p>
+<h2 is-upgraded>Add the Chatbot to a Team Chat Channel</h2>
+<p>Once your app is configured, users can add it directly to any Zoom Team Chat channel:</p>
 <ol type="1">
-<li>Navigate to a <strong>Team Chat channel</strong></li>
-<li>Click the <strong>members icon</strong> at the top of the channel</li>
+<li>Navigate to the channel in Zoom</li>
+<li>Click the <strong>members icon</strong> at the top</li>
 </ol>
-<p><strong>Example:</strong></p>
 <p class="image-container"><img alt="Open Add Members Modal" src="img/111f5553763ca043.png"></p>
 <ol type="1" start="3">
-<li>Under the <strong>Integrations</strong> tab, click <strong>Add apps</strong></li>
+<li>Under <strong>Integrations</strong>, click <strong>Add apps</strong></li>
 </ol>
 <p class="image-container"><img alt="Add Apps to Channel" src="img/c75ab6e30475ee88.png"></p>
 <ol type="1" start="4">
-<li>Search for and select your chatbot app from the list</li>
+<li>Find and select your app</li>
 </ol>
 <p class="image-container"><img alt="Search for Chatbot" src="img/c57ccef1e79ad0be.png"></p>
 <ol type="1" start="5">
-<li>Choose which users/groups can access the app<ul>
-<li>Recommended: Select <strong>Users &amp; groups</strong> or <strong>All users</strong></li>
-</ul>
-</li>
+<li>Choose the access level (e.g., <strong>Users &amp; groups</strong> or <strong>All users</strong>)</li>
 </ol>
 <p class="image-container"><img alt="App Permissions Prompt" src="img/4eb4446d9a0785d3.png"></p>
 <ol type="1" start="6">
 <li>Confirm the app&#39;s permissions and click <strong>Add</strong></li>
 </ol>
 <p class="image-container"><img alt="Add to Channel Confirmation" src="img/92b4c20f3f1b8908.png"></p>
-<p>This setup enables your Zoom chatbot to operate at the channel level—automatically listening for interactions and responding to events in a collaborative, multi-user environment.</p>
+<h2 is-upgraded>Update Webhook Handler with Channel Events</h2>
+<h3 is-upgraded>File Path</h3>
+<pre><code>routes/zoom-webhookHandler.js
+</code></pre>
+<h3 is-upgraded>Code Snippet</h3>
+<pre><code language="language-js" class="language-js">import express from &#39;express&#39;;
+import { validateWebhookPayload, createValidationMiddleware } from &#39;../utils/validation.js&#39;;
+
+import { sendChatMessage } from &#39;../utils/zoom-api.js&#39;;
+// import { callAnthropicAPI } from &#39;../utils/anthropic.js&#39;;
+
+const router = express.Router();
+
+/**
+ * Handles Zoom Team Chat webhook events
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+async function handleZoomWebhook(req, res) {
+    try {
+        const { event, payload } = req.body;
+
+        console.log(`Received Zoom webhook event: ${event}`);
+        console.log(&#39;Payload:&#39;, payload);
+
+        const toJid = payload?.toJid;
+        const message = payload?.cmd || payload?.message || &#39;&#39;;
+        const userId = payload?.userJid;
+        const accountId = payload?.accountId;
+        const robot_jid = payload?.robotJid;
+
+
+
+        switch (event) {
+            case &#39;bot_installed&#39;:
+
+                console.log(&#39;Zoom Team Chat bot installed successfully&#39;);
+                break;
+
+            case &#39;bot_notification&#39;:
+                console.log(&#39;Processing bot notification from Zoom Team Chat&#39;);
+                sendChatMessage(toJid, message);
+                //await callAnthropicAPI(payload, true);
+                break;
+
+            case &#39;interactive_message_actions&#39;:
+                console.log(&#39;Processing interactive message action from Zoom Team Chat&#39;);
+                sendChatMessage(toJid, `You clicked a button with value: ${payload?.actionItem?.value || &#39;unknown&#39;}`);
+
+                break;
+
+            case &#34;team_chat.app_mention&#34;:
+                console.log(&#34;team_chat.app_mention&#34;, {
+                    channel_name: payload.object?.channel_name,
+                    channel: payload.object?.channel_id || payload.object?.channel_name,
+                    message: payload.object?.message,
+                    message_id: payload.object?.message_id,
+                    robot_jid: payload.object?.robot_jid || payload.object?.robot_name,
+                    resourceId: payload.object?.resourceId,
+                });
+
+
+                // TODO: respond in thread or DM based on your bot behavior
+                // await callAnthropicAPI(payload);
+
+                break;
+
+            // Triggers when slash command is used in team chat channel
+            case &#34;team_chat.app_conversation_opened&#34;:
+
+                console.log(&#34;team_chat.app_conversation_opened&#34;, {
+                    type: payload.object?.type,
+                    to_jid: payload.object?.to_jid,
+                    trigger_id: payload.object?.trigger_id,
+                    user_jid: payload.object?.user_jid,
+                    operator_id: payload?.operator_id,
+                });
+                // TODO: respond in thread or DM based on your bot behavior
+                // await callAnthropicAPI(payload);
+                break;
+
+            case &#34;team_chat.app_invited&#34;:
+                console.log(&#34;team_chat.app_invited&#34;, {
+                    channel_name: payload.object?.channel_name,
+                    channel: payload.object?.channel_id,
+                    operator: payload?.operator_id,
+                    user_jid: payload.object?.user_jid,
+                    to_jid: payload.object?.to_jid,
+                });
+
+                // TODO: greet channel or set up state
+                // await callAnthropicAPI(payload);
+
+                break;
+
+            // This may be incorrectly labled should be team_chat.channel_invited
+            case &#34;team_chat.channel_app_added&#34;:
+                console.log(&#34;team_chat.channel_app_added&#34;, {
+                    channel_name: payload.object?.channel_name,
+                    channel: payload.object?.channel_id,
+                    operator: payload?.operator_id,
+                    user_jid: payload.object?.user_jid,
+                    to_jid: payload.object?.to_jid,
+                });
+                break;
+
+            case &#34;team_chat.app_removed&#34;:
+
+                // This may be incorrectly labled should be team_chat.channel_app_removed
+                console.log(&#34;team_chat.channel_app_removed&#34;, {
+                    channel_name: payload.object?.channel_name,
+                    channel: payload.object?.channel_id,
+                    operator: payload?.operator_id,
+                    user_jid: payload.object?.user_jid,
+                    to_jid: payload.object?.to_jid,
+                });
+                break;
+
+            case &#39;app_deauthorized&#39;:
+                console.log(&#39;Zoom Team Chat bot uninstalled&#39;);
+                break;
+
+            case &#39;endpoint.url_validation&#39;:
+                console.log(&#39;Validating webhook endpoint URL&#39;);
+                return res.status(200).json({
+                    message: {
+                        plainToken: payload?.plainToken || &#39;missing_token&#39;,
+                    },
+                });
+
+            default:
+                console.log(`Unsupported Zoom webhook event type: ${event}`);
+                break;
+        }
+
+        res.status(200).json({
+            success: true,
+            message: &#39;Event processed successfully&#39;,
+            event
+        });
+
+    } catch (error) {
+        console.error(&#39;Error handling Zoom webhook event:&#39;, error);
+
+        res.status(500).json({
+            success: false,
+            error: &#39;Internal Server Error&#39;,
+            message: error.message
+        });
+    }
+}
+
+// Webhook route with validation
+router.post(&#39;/&#39;, createValidationMiddleware(validateWebhookPayload), handleZoomWebhook);
+
+// Health check endpoint
+router.get(&#39;/health&#39;, (_req, res) =&gt; {
+    res.status(200).json({
+        status: &#39;healthy&#39;,
+        timestamp: new Date().toISOString(),
+        service: &#39;zoom-webhook-handler&#39;
+    });
+});
+
+export default router;
+</code></pre>
+<p>This handler listens for key app-in-channel events, such as mentions, invites, and interactive actions. You can use these events to trigger dynamic chatbot behavior and thread-based interactions.</p>
 <h2 is-upgraded>Resources</h2>
 <ul>
 <li><a href="https://support.zoom.com/hc/en/article?id=zm_kb&sysparm_article=KB0082265" target="_blank">Zoom Support: Using Apps in Chats</a></li>
