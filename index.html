@@ -625,6 +625,82 @@ export async function sendChatMessage(toJid, message, replyTo = null) {
 
 </code></pre>
 <p>This utility function enables structured messaging and optional threading in Zoom Team Chat—essential features for building interactive, event-driven chatbot experiences.</p>
+<h2 is-upgraded>Create message route handler</h2>
+<p>Create a Post route to handler for messages.</p>
+<h3 is-upgraded>File Path</h3>
+<pre><code language="language-bash" class="language-bash">routes/message-routes.js
+</code></pre>
+<h3 is-upgraded>Code Snippet</h3>
+<pre><code language="language-js" class="language-js">import express from &#39;express&#39;;
+import fetch from &#39;node-fetch&#39;;
+import { getChatbotToken } from &#39;../utils/zoom-chatbot-auth.js&#39;;
+import { validateMessagePayload, createValidationMiddleware, sanitizeMessage } from &#39;../utils/validation.js&#39;;
+
+const router = express.Router();
+
+/**
+* POST /api/message
+* Sends a message to a Zoom Team Chat channel or user.
+* Optional: include `reply_to` for threaded replies.
+*/
+router.post(&#39;/message&#39;, createValidationMiddleware(validateMessagePayload), async (req, res) =&gt; {
+ try {
+   const { to_jid, message, reply_to } = req.body;
+
+   // Sanitize message content
+   const sanitizedMessage = sanitizeMessage(message);
+
+   // Retrieve OAuth token from helper (Server-to-Server)
+   const accessToken = await getChatbotToken();
+
+   // Construct request body for Zoom API
+   const body = {
+     to_jid,
+     message: sanitizedMessage,
+   };
+
+   // Optional: add reply_to to nest the message in a thread
+   if (reply_to) body.reply_to = reply_to;
+
+   const response = await fetch(&#39;https://api.zoom.us/v2/im/chat/messages&#39;, {
+     method: &#39;POST&#39;,
+     headers: {
+       Authorization: `Bearer ${accessToken}`,
+       &#39;Content-Type&#39;: &#39;application/json&#39;,
+     },
+     body: JSON.stringify(body),
+   });
+
+   const data = await response.json();
+
+   if (!response.ok) {
+     console.error(&#39;Zoom API error:&#39;, data);
+     return res.status(response.status).json({
+       success: false,
+       error: &#39;Zoom API error&#39;,
+       details: data
+     });
+   }
+
+   console.log(&#39;Message sent successfully:&#39;, data);
+   return res.status(200).json({
+     success: true,
+     message: &#39;Message sent successfully!&#39;,
+     data,
+   });
+ } catch (error) {
+   console.error(&#39;Error sending message:&#39;, error);
+   res.status(500).json({ 
+     success: false,
+     error: &#39;Internal server error&#39;,
+     message: process.env.NODE_ENV === &#39;production&#39; ? &#39;Something went wrong&#39; : error.message
+   });
+ }
+});
+
+export default router;
+
+</code></pre>
 
 
       </google-codelab-step>
